@@ -18,7 +18,7 @@ function unixToHammer(unix: number) {
   return unix * 1000;
 }
 
-ava.serial("Test", async (t) => {
+ava.serial("GET /", async (t) => {
   const res = await Axios.get(url);
   t.is(typeof res.data, "object");
   t.is(res.data.name, "Corinth");
