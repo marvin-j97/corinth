@@ -1,25 +1,11 @@
 import ava from "ava";
 import Axios from "axios";
-import execa from "execa";
-import { platform } from "os";
+import { getUrl, spawnCorinth, unixToHammer } from "../util";
 
-const port = 6767;
-const url = `http://localhost:${port}`;
-const uri = (route: string) => url + route;
-
-const exeName = "corinth" + (platform() === "win32" ? ".exe" : "");
-
-const corinth = execa(`../target/debug/${exeName}`, [
-  "--port",
-  port.toString(),
-]);
-
-function unixToHammer(unix: number) {
-  return unix * 1000;
-}
+spawnCorinth();
 
 ava.serial("GET /", async (t) => {
-  const res = await Axios.get(url);
+  const res = await Axios.get(getUrl("/"));
   t.is(typeof res.data, "object");
   t.is(res.data.name, "Corinth");
   t.is(typeof res.data.version, "string");
