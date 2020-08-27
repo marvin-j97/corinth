@@ -19,6 +19,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 struct RootInfo {
   name: String,
   version: String,
+  uptime_ms: u64,
   uptime_secs: u64,
   started_at: u64,
 }
@@ -65,6 +66,7 @@ fn main() {
       let res_body = RootInfo {
         name: String::from("Corinth"),
         version: String::from("0.0.1"),
+        uptime_ms: uptime_secs * 1000,
         uptime_secs,
         started_at: now - uptime_secs,
       };
