@@ -72,6 +72,7 @@ pub fn create_server() -> Nickel {
             "size": queue.size(),
             "num_deduped": queue.deduped_size(),
             "num_done": queue.num_done(),
+            "num_dedup_hits": queue.num_dedup_hits(),
           }
         }))
       }
@@ -104,7 +105,7 @@ pub fn create_server() -> Nickel {
           else {
             // Message deduplicated
             success(&mut res, StatusCode::Accepted, json!({
-              "message": "Message has been deduplicated"
+              "message": "Message has been discarded"
             }))
           }
         }

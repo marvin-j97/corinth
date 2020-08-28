@@ -11,7 +11,7 @@ ava.serial("List queues", async (t) => {
     await createQueue(name);
   }
 
-  const res = await Axios.get(getUrl("/queues"), NO_FAIL);
+  const res = await Axios.get(getUrl("/queues"), NO_FAIL());
   t.is(res.status, 200);
   t.is(typeof res.data.result, "object");
   t.is(typeof res.data.result.queues, "object");

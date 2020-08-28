@@ -14,6 +14,6 @@ export function unixToHammer(unix: number) {
   return unix * 1000;
 }
 
-export const NO_FAIL = {
+export const NO_FAIL = () => ({
   validateStatus: () => true,
-};
+});

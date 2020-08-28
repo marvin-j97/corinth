@@ -11,7 +11,6 @@ pub struct Message {
 }
 
 struct DedupItem {
-  id: String,
   expires_at: u64,
 }
 
@@ -19,6 +18,7 @@ pub struct Queue {
   items: VecDeque<Message>,
   dedup_map: HashMap<String, DedupItem>,
   num_done: u64,
+  num_dedup_hits: u64,
   created_at: u64,
 }
 
@@ -28,6 +28,7 @@ impl Queue {
     return Queue {
       items: VecDeque::new(),
       dedup_map: HashMap::new(),
+      num_dedup_hits: 0,
       num_done: 0,
       created_at: timestamp(),
     };
@@ -36,14 +37,15 @@ impl Queue {
   // Checks if the given dedup id is already being tracked
   // If not, it will be tracked
   // Returns true if the id was not originally tracked, false otherwise
-  fn register_dedup_id(&mut self, id: String, dedup_id: Option<String>) -> bool {
+  fn register_dedup_id(&mut self, dedup_id: Option<String>) -> bool {
     if dedup_id.is_some() {
       let d_id = dedup_id.unwrap();
-      if self.dedup_map.contains_key(&d_id) {
+      let dedup_in_map = self.dedup_map.get(&d_id);
+      if dedup_in_map.is_some() && dedup_in_map.unwrap().expires_at > timestamp() {
+        self.num_dedup_hits += 1;
         return false;
       }
       let dedup_item = DedupItem {
-        id: id.clone(),
         expires_at: timestamp() + min_to_secs(5),
       };
       self.dedup_map.insert(d_id, dedup_item);
@@ -66,7 +68,7 @@ impl Queue {
   // Returns the message or None
   pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> Option<Message> {
     let id = ulid_str();
-    if self.register_dedup_id(id.clone(), dedup_id) {
+    if self.register_dedup_id(dedup_id) {
       return Some(self.enqueue(id, item));
     }
     None
@@ -97,6 +99,7 @@ impl Queue {
   pub fn size(&self) -> usize {
     self.items.len()
   }
+
   // Returns the amount of successfully acknowledges messages
   pub fn num_done(&self) -> u64 {
     self.num_done
@@ -105,6 +108,12 @@ impl Queue {
   pub fn created_at(&self) -> u64 {
     self.created_at
   }
+
+  // Returns the amount of dedup hits
+  pub fn num_dedup_hits(&self) -> u64 {
+    self.num_dedup_hits
+  }
+
   // Returns the amount of deduplication ids currently being tracked
   pub fn deduped_size(&self) -> usize {
     self.dedup_map.len()

@@ -5,7 +5,7 @@ import { getUrl, spawnCorinth, unixToHammer, NO_FAIL } from "../util";
 spawnCorinth();
 
 ava.serial("GET /", async (t) => {
-  const res = await Axios.get(getUrl("/"), NO_FAIL);
+  const res = await Axios.get(getUrl("/"), NO_FAIL());
   t.is(res.status, 200);
   t.is(typeof res.data.result, "object");
   t.is(typeof res.data.result.info, "object");
