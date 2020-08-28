@@ -2,6 +2,7 @@ import ava from "ava";
 import Axios from "axios";
 import { spawnCorinth, NO_FAIL } from "../util";
 import { queueUrl as getQueueUrl, createQueue } from "../common";
+import test from "ava";
 
 spawnCorinth();
 
@@ -27,17 +28,25 @@ ava.serial("Queue should be empty", async (t) => {
   t.is(Object.keys(res.data.result.queue).length, 5);
 });
 
+const testItem = {
+  description: "This is a test object!",
+};
+
 ava.serial("Enqueue item", async (t) => {
   const res = await Axios.post(
     queueUrl + "/enqueue",
     {
-      item: {
-        description: "This is a test object!",
-      },
+      item: testItem,
     },
     NO_FAIL
   );
   t.is(res.status, 201);
+  t.is(typeof res.data.result, "object");
+  t.is(res.data.result.message, "Message has been enqueued");
+  t.is(typeof res.data.result.item, "object");
+  t.is(typeof res.data.result.item.id, "string");
+  t.is(typeof res.data.result.item.queued_at, "number");
+  t.deepEqual(res.data.result.item.item, testItem);
 });
 
 ava.serial("1 item should be queued", async (t) => {
@@ -59,13 +68,17 @@ ava.serial("Enqueue 50 items", async (t) => {
     const res = await Axios.post(
       queueUrl + "/enqueue",
       {
-        item: {
-          description: "This is a test object!",
-        },
+        item: testItem,
       },
       NO_FAIL
     );
     t.is(res.status, 201);
+    t.is(typeof res.data.result, "object");
+    t.is(res.data.result.message, "Message has been enqueued");
+    t.is(typeof res.data.result.item, "object");
+    t.is(typeof res.data.result.item.id, "string");
+    t.is(typeof res.data.result.item.queued_at, "number");
+    t.deepEqual(res.data.result.item.item, testItem);
   }
 });
 

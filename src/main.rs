@@ -107,10 +107,13 @@ fn main() {
           let mut queue_map = QUEUES.lock().unwrap();
           let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
           let dedup_id = req.query().get("deduplication_id");
-          if queue.try_enqueue(body.item, if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None }) {
+          let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None };
+          let msg = queue.try_enqueue(body.item, dedup_id_as_string);
+          if msg.is_some() {
             // Enqueued message
             success(&mut res, StatusCode::Created, json!({
-              "message": "Message enqueued"
+              "message": "Message has been enqueued",
+              "item": msg.unwrap(),
             }))
           }
           else {

@@ -6,6 +6,7 @@ use std::collections::{HashMap, VecDeque};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Message {
   id: String,
+  queued_at: u64,
   item: Value,
 }
 
@@ -50,20 +51,25 @@ impl Queue {
     true
   }
 
-  fn enqueue(&mut self, id: String, item: Value) {
-    self.items.push_back(Message { id, item });
+  fn enqueue(&mut self, id: String, item: Value) -> Message {
+    let message = Message {
+      id,
+      item,
+      queued_at: timestamp(),
+    };
+    self.items.push_back(message.clone());
+    message
   }
 
   // Tries to enqueue the given item
   // If a deduplication id is given and the id is currently being tracked the message will be dropped
-  // Returns true if the message was queued, false otherwise
-  pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> bool {
+  // Returns the message or None
+  pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> Option<Message> {
     let id = ulid_str();
     if self.register_dedup_id(id.clone(), dedup_id) {
-      self.enqueue(id, item);
-      return true;
+      return Some(self.enqueue(id, item));
     }
-    false
+    None
   }
 
   // Returns the first element, but does not dequeue it
