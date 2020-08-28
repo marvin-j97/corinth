@@ -8,8 +8,8 @@ mod global_data;
 mod queue;
 mod response;
 
-use crate::global_data::queue_exists;
-use crate::global_data::QUEUES;
+use crate::date::elapsed_secs;
+use crate::global_data::{create_data_folder, queue_exists, QUEUES};
 use crate::nickel::QueryString;
 use date::{iso_date, timestamp};
 use nickel::status::StatusCode;
@@ -17,8 +17,6 @@ use nickel::{HttpRouter, JsonBody, Nickel};
 use queue::Queue;
 use response::{error, success};
 use serde_json::{json, Value};
-use std::env;
-use std::fs;
 use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
@@ -27,8 +25,7 @@ struct EnqueueBody {
 }
 
 fn main() {
-  let folder = env::var("CORINTH_BASE_FOLDER").unwrap_or(String::from("corinth_data"));
-  fs::create_dir(folder).ok();
+  create_data_folder();
 
   let mut server = Nickel::new();
   let start_time = Instant::now();
@@ -43,7 +40,7 @@ fn main() {
     "/",
     middleware! { |_req, mut res|
       let now = timestamp();
-      let uptime_secs = start_time.elapsed().as_secs();
+      let uptime_secs = elapsed_secs(start_time);
       success(&mut res, StatusCode::Ok, json!({
         "info": {
           "name": String::from("Corinth"),
@@ -140,6 +137,7 @@ fn main() {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
+        // TODO: check ?ack=true
         let message = queue.dequeue(false);
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({

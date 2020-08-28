@@ -1,5 +1,5 @@
 use chrono::{DateTime, Local};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 pub fn iso_date() -> String {
   let now: DateTime<Local> = Local::now();
@@ -15,4 +15,8 @@ pub fn timestamp() -> u64 {
 
 pub fn min_to_secs(min: u64) -> u64 {
   min * 60
+}
+
+pub fn elapsed_secs(start_time: Instant) -> u64 {
+  start_time.elapsed().as_secs()
 }
