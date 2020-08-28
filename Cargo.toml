@@ -10,6 +10,7 @@ serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
 chrono = "0.4"
+oysterpack_uid = "0.2.0"
 
 [dependencies.nickel]
 version = "*"
