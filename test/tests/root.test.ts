@@ -1,11 +1,12 @@
 import ava from "ava";
 import Axios from "axios";
-import { getUrl, spawnCorinth, unixToHammer } from "../util";
+import { getUrl, spawnCorinth, unixToHammer, NO_FAIL } from "../util";
 
 spawnCorinth();
 
 ava.serial("GET /", async (t) => {
-  const res = await Axios.get(getUrl("/"));
+  const res = await Axios.get(getUrl("/"), NO_FAIL);
+  t.is(res.status, 200);
   t.is(typeof res.data, "object");
   t.is(res.data.name, "Corinth");
   t.is(typeof res.data.version, "string");
