@@ -23,4 +23,5 @@ ava.serial("GET /queue/new_queue -> 200", async (t) => {
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.name, queueName);
   t.is(res.data.result.size, 0);
+  t.is(res.data.result.num_deduped, 0);
 });

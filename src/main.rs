@@ -3,79 +3,32 @@ extern crate nickel;
 #[macro_use]
 extern crate serde_derive;
 
+mod date;
+mod global_data;
 mod queue;
+mod response;
 
-use chrono::{DateTime, Local};
-use lazy_static::lazy_static;
+use crate::global_data::queue_exists;
+use crate::global_data::QUEUES;
+use crate::nickel::QueryString;
+use date::{iso_date, timestamp};
 use nickel::status::StatusCode;
-use nickel::{HttpRouter, JsonBody, Nickel, Request, Response};
+use nickel::{HttpRouter, JsonBody, Nickel};
 use queue::Queue;
+use response::{error, success};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::env;
 use std::fs;
-use std::sync::Mutex;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
 struct EnqueueBody {
   item: Value,
 }
 
-#[derive(Serialize, Deserialize)]
-struct SuccessResponse {
-  result: Value,
-}
-
-#[derive(Serialize, Deserialize)]
-struct ErrorResponse {
-  error: bool,
-  message: String,
-}
-
-lazy_static! {
-  static ref QUEUES: Mutex<HashMap<String, Queue>> = {
-    let mut map: HashMap<String, Queue> = HashMap::new();
-
-    // TODO: DEBUG
-    let test_name = String::from("abc");
-    map.insert(test_name, Queue::new());
-
-    Mutex::new(map)
-  };
-}
-
-fn iso_date() -> String {
-  let now: DateTime<Local> = Local::now();
-  now.to_rfc2822()
-}
-
-fn queue_exists(req: &mut Request) -> bool {
-  let queue_map = QUEUES.lock().unwrap();
-  let queue_name = String::from(req.param("queue_name").unwrap());
-  let queue_maybe = queue_map.get(&queue_name);
-  queue_maybe.is_some()
-}
-
-fn success(result: Value) -> Result<Value, (nickel::status::StatusCode, serde_json::error::Error)> {
-  let res_body = SuccessResponse { result };
-  serde_json::to_value(res_body).map_err(|e| (StatusCode::InternalServerError, e))
-}
-
-fn error(
-  res: &mut Response,
-  status: StatusCode,
-  message: &str,
-) -> Result<Value, (nickel::status::StatusCode, serde_json::error::Error)> {
-  let res_body = ErrorResponse {
-    error: true,
-    message: String::from(message),
-  };
-  res.set(status);
-  serde_json::to_value(res_body).map_err(|e| (StatusCode::InternalServerError, e))
-}
-
 fn main() {
-  fs::create_dir("corinth_data").ok();
+  let folder = env::var("CORINTH_BASE_FOLDER").unwrap_or(String::from("corinth_data"));
+  fs::create_dir(folder).ok();
 
   let mut server = Nickel::new();
   let start_time = Instant::now();
@@ -88,16 +41,17 @@ fn main() {
   // Get server info
   server.get(
     "/",
-    middleware! { |_req|
-      let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    middleware! { |_req, mut res|
+      let now = timestamp();
       let uptime_secs = start_time.elapsed().as_secs();
-      serde_json::to_value(json!({
+      success(&mut res, StatusCode::Ok, json!({
         "name": String::from("Corinth"),
         "version": String::from("0.0.1"),
         "uptime_ms": uptime_secs * 1000,
         "uptime_secs": uptime_secs,
         "started_at": now - uptime_secs,
-      })).map_err(|e| (StatusCode::InternalServerError, e))
+      }))
+
     },
   );
 
@@ -109,9 +63,10 @@ fn main() {
         let queue_name = String::from(req.param("queue_name").unwrap());
         let queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get(&queue_name).unwrap();
-        success(json!({
+        success(&mut res, StatusCode::Ok, json!({
           "name": queue_name,
-          "size": queue.size()
+          "size": queue.size(),
+          "num_deduped": queue.deduped_size(),
         }))
       }
       else {
@@ -130,10 +85,19 @@ fn main() {
         if queue_exists(req) {
           let mut queue_map = QUEUES.lock().unwrap();
           let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-          queue.enqueue(body.item);
-          success(json!({
-            "message": "Message enqueued"
-          }))
+          let dedup_id = req.query().get("deduplication_id");
+          if queue.enqueue(body.item, if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None }) {
+            // Enqueued message
+            success(&mut res, StatusCode::Created, json!({
+              "message": "Message enqueued"
+            }))
+          }
+          else {
+            // Message deduplicated
+            success(&mut res, StatusCode::Accepted, json!({
+              "message": "Message has been deduplicated"
+            }))
+          }
         }
         else {
           // TODO: check ?create_queue=true
@@ -154,13 +118,12 @@ fn main() {
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
         let message = queue.dequeue();
         if message.is_some() {
-          success(json!({
+          success(&mut res, StatusCode::Ok, json!({
             "message": message.unwrap()
           }))
         }
         else {
-          res.set(StatusCode::NoContent);
-          return res.send("");
+          success(&mut res, StatusCode::NoContent, json!(null))
         }
       }
       else {
@@ -179,13 +142,13 @@ fn main() {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue_name = String::from(req.param("queue_name").unwrap());
         queue_map.insert(queue_name, Queue::new());
-        res.set(StatusCode::Created);
-        success(json!(null))
+        success(&mut res, StatusCode::Created, json!(null))
       }
     },
   );
 
   // Parse port from cli arguments
+  // TODO: use env variable instead
   let mut port = 6767;
 
   let args: Vec<String> = std::env::args().collect();
