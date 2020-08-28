@@ -55,6 +55,20 @@ fn main() {
     },
   );
 
+  // List queues
+  server.get(
+    "/queues",
+    middleware! { |_req, mut res|
+      let queue_map = QUEUES.lock().unwrap();
+      let mut queue_names: Vec<String> = queue_map.keys().map(|key| key.clone()).collect();
+      queue_names.sort();
+      success(&mut res, StatusCode::Ok, json!({
+        "items": queue_names,
+        "num_queues": queue_names.len(),
+      }))
+    },
+  );
+
   // Get queue info
   server.get(
     "/queue/:queue_name",
