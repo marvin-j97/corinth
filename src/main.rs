@@ -123,7 +123,7 @@ fn main() {
           }))
         }
         else {
-          success(&mut res, StatusCode::NoContent, json!(null))
+          success(&mut res, StatusCode::Ok, json!(null))
         }
       }
       else {
