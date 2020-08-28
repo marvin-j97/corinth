@@ -6,12 +6,7 @@ use std::sync::Mutex;
 
 lazy_static! {
   pub static ref QUEUES: Mutex<HashMap<String, Queue>> = {
-    let mut map: HashMap<String, Queue> = HashMap::new();
-
-    // TODO: DEBUG
-    let test_name = String::from("abc");
-    map.insert(test_name, Queue::new());
-
+    let map: HashMap<String, Queue> = HashMap::new();
     Mutex::new(map)
   };
 }

@@ -45,13 +45,14 @@ fn main() {
       let now = timestamp();
       let uptime_secs = start_time.elapsed().as_secs();
       success(&mut res, StatusCode::Ok, json!({
-        "name": String::from("Corinth"),
-        "version": String::from("0.0.1"),
-        "uptime_ms": uptime_secs * 1000,
-        "uptime_secs": uptime_secs,
-        "started_at": now - uptime_secs,
+        "info": {
+          "name": String::from("Corinth"),
+          "version": String::from("0.0.1"),
+          "uptime_ms": uptime_secs * 1000,
+          "uptime_secs": uptime_secs,
+          "started_at": now - uptime_secs,
+        }
       }))
-
     },
   );
 
@@ -63,8 +64,10 @@ fn main() {
       let mut queue_names: Vec<String> = queue_map.keys().map(|key| key.clone()).collect();
       queue_names.sort();
       success(&mut res, StatusCode::Ok, json!({
-        "items": queue_names,
-        "num_queues": queue_names.len(),
+        "queues": {
+          "items": queue_names,
+          "length": queue_names.len(),
+        }
       }))
     },
   );
@@ -78,11 +81,13 @@ fn main() {
         let queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get(&queue_name).unwrap();
         success(&mut res, StatusCode::Ok, json!({
-          "name": queue_name,
-          "created_at": queue.created_at(),
-          "size": queue.size(),
-          "num_deduped": queue.deduped_size(),
-          "num_done": queue.num_done(),
+          "queue": {
+            "name": queue_name,
+            "created_at": queue.created_at(),
+            "size": queue.size(),
+            "num_deduped": queue.deduped_size(),
+            "num_done": queue.num_done(),
+          }
         }))
       }
       else {
