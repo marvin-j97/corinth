@@ -50,13 +50,17 @@ impl Queue {
     true
   }
 
+  fn enqueue(&mut self, id: String, item: Value) {
+    self.items.push_back(Message { id, item });
+  }
+
   // Tries to enqueue the given item
   // If a deduplication id is given and the id is currently being tracked the message will be dropped
   // Returns true if the message was queued, false otherwise
   pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> bool {
     let id = ulid_str();
     if self.register_dedup_id(id.clone(), dedup_id) {
-      self.items.push_back(Message { id, item });
+      self.enqueue(id, item);
       return true;
     }
     false
