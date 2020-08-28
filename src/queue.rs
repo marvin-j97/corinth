@@ -17,6 +17,7 @@ struct DedupItem {
 pub struct Queue {
   items: VecDeque<Message>,
   dedup_map: HashMap<String, DedupItem>,
+  num_done: u64,
 }
 
 impl Queue {
@@ -24,6 +25,7 @@ impl Queue {
     return Queue {
       items: VecDeque::new(),
       dedup_map: HashMap::new(),
+      num_done: 0,
     };
   }
 
@@ -68,6 +70,10 @@ impl Queue {
 
   pub fn size(&self) -> usize {
     self.items.len()
+  }
+
+  pub fn num_done(&self) -> u64 {
+    self.num_done
   }
 
   pub fn deduped_size(&self) -> usize {

@@ -67,6 +67,7 @@ fn main() {
           "name": queue_name,
           "size": queue.size(),
           "num_deduped": queue.deduped_size(),
+          "num_done": queue.num_done(),
         }))
       }
       else {
