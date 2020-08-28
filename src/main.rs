@@ -35,8 +35,11 @@ struct ErrorResponse {
 lazy_static! {
   static ref QUEUES: Mutex<HashMap<String, Queue>> = {
     let mut map: HashMap<String, Queue> = HashMap::new();
+
+    // TODO: DEBUG
     let test_name = String::from("abc");
     map.insert(test_name, Queue::new());
+
     Mutex::new(map)
   };
 }
