@@ -134,17 +134,38 @@ fn main() {
     },
   );
 
-  server.post(
-    "/queue/:queue_name/head",
+  server.delete(
+    "/queue/:queue_name/dequeue",
     middleware! { |req, mut res|
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let peek = String::from(req.query().get("peek").unwrap_or("false"));
-        let message = queue.dequeue(peek == "true");
+        let message = queue.dequeue(false);
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
-            "message": message.unwrap()
+            "item": message.unwrap()
+          }))
+        }
+        else {
+          success(&mut res, StatusCode::Ok, json!(null))
+        }
+      }
+      else {
+        error(&mut res, StatusCode::NotFound, "Queue not found")
+      }
+    },
+  );
+
+  server.get(
+    "/queue/:queue_name/peek",
+    middleware! { |req, mut res|
+      if queue_exists(req) {
+        let mut queue_map = QUEUES.lock().unwrap();
+        let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
+        let message = queue.dequeue(true);
+        if message.is_some() {
+          success(&mut res, StatusCode::Ok, json!({
+            "item": message.unwrap()
           }))
         }
         else {
