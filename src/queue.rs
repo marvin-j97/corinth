@@ -18,6 +18,7 @@ pub struct Queue {
   items: VecDeque<Message>,
   dedup_map: HashMap<String, DedupItem>,
   num_done: u64,
+  created_at: u64,
 }
 
 impl Queue {
@@ -26,6 +27,7 @@ impl Queue {
       items: VecDeque::new(),
       dedup_map: HashMap::new(),
       num_done: 0,
+      created_at: timestamp(),
     };
   }
 
@@ -37,7 +39,7 @@ impl Queue {
     });
     if dedup_id.is_some() {
       let d_id = dedup_id.unwrap();
-      if self.dedup_map.get(&d_id).is_some() {
+      if self.dedup_map.contains_key(&d_id) {
         return false;
       }
       let dedup_item = DedupItem {
@@ -74,6 +76,10 @@ impl Queue {
 
   pub fn num_done(&self) -> u64 {
     self.num_done
+  }
+
+  pub fn created_at(&self) -> u64 {
+    self.created_at
   }
 
   pub fn deduped_size(&self) -> usize {

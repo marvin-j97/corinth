@@ -79,6 +79,7 @@ fn main() {
         let queue = queue_map.get(&queue_name).unwrap();
         success(&mut res, StatusCode::Ok, json!({
           "name": queue_name,
+          "created_at": queue.created_at(),
           "size": queue.size(),
           "num_deduped": queue.deduped_size(),
           "num_done": queue.num_done(),
