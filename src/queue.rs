@@ -61,7 +61,7 @@ impl Queue {
       if !peek {
         self.items.pop_front();
       }
-      return Some(item_maybe.unwrap().clone());
+      return item_maybe;
     }
     return None;
   }
