@@ -111,12 +111,13 @@ fn main() {
   );
 
   server.post(
-    "/queue/:queue_name/dequeue",
+    "/queue/:queue_name/head",
     middleware! { |req, mut res|
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let message = queue.dequeue();
+        let peek = String::from(req.query().get("peek").unwrap_or("false"));
+        let message = queue.dequeue(peek == "true");
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "message": message.unwrap()

@@ -3,7 +3,7 @@ use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Message {
   id: String,
   item: Value,
@@ -47,8 +47,23 @@ impl Queue {
     true
   }
 
-  pub fn dequeue(&mut self) -> Option<Message> {
-    self.items.pop_front()
+  fn peek(&mut self) -> Option<Message> {
+    let item_maybe = self.items.get(0);
+    if item_maybe.is_some() {
+      return Some(item_maybe.unwrap().clone());
+    }
+    return None;
+  }
+
+  pub fn dequeue(&mut self, peek: bool) -> Option<Message> {
+    let item_maybe = self.peek();
+    if item_maybe.is_some() {
+      if !peek {
+        self.items.pop_front();
+      }
+      return Some(item_maybe.unwrap().clone());
+    }
+    return None;
   }
 
   pub fn size(&self) -> usize {
