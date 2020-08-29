@@ -10,7 +10,7 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
   return Axios.put(queueUrl(name), opts);
 }
 
-export function validateEmptyQueueResponse<T>(
+export function validateEmptyQueueResponse(
   t: ExecutionContext,
   queueName: string,
   res: AxiosResponse

@@ -88,14 +88,15 @@ pub fn create_server() -> Nickel {
       let body = try_with!(res, {
         req.json_as::<EnqueueBody>().map_err(|e| (StatusCode::BadRequest, e))
       });
-      if body.item.is_object() {
-        let mut queue_map = QUEUES.lock().unwrap();
+      
+      if body.item.is_object() {        
         let queue_name = String::from(req.param("queue_name").unwrap());
 
         if !queue_exists(req) {
           let create_queue = req.query().get("create_queue");
           let create_queue_as_string = if create_queue.is_some() { Some(String::from(create_queue.unwrap())) } else { None };
           if create_queue.is_some() && create_queue_as_string.unwrap() == "true" {
+            let mut queue_map = QUEUES.lock().unwrap();
             queue_map.insert(queue_name.clone(), Queue::new());
           }
           else {
@@ -103,6 +104,7 @@ pub fn create_server() -> Nickel {
           }
         }
 
+        let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&queue_name).unwrap();
         let dedup_id = req.query().get("deduplication_id");
         let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None };

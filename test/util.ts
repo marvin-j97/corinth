@@ -7,7 +7,9 @@ export const getUrl = (route: string) => IP + route;
 
 export function spawnCorinth() {
   const exeName = "corinth" + (platform() === "win32" ? ".exe" : "");
-  return execa(`../target/debug/${exeName}`, ["--port", PORT.toString()]);
+  return execa(`../target/debug/${exeName}`, ["--port", PORT.toString()], {
+    stdout: process.stdout,
+  });
 }
 
 export function unixToHammer(unix: number) {
