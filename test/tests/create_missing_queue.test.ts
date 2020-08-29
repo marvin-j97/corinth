@@ -24,12 +24,12 @@ ava.serial("Create missing queue on enqueue", async (t) => {
   });
   t.is(res.status, 201);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.result.message, "Message has been enqueued");
+  t.is(res.data.message, "Message has been enqueued successfully");
   t.is(typeof res.data.result.item, "object");
   t.is(typeof res.data.result.item.id, "string");
   t.is(typeof res.data.result.item.queued_at, "number");
   t.deepEqual(res.data.result.item.item, testItem);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.item).length, 3);
 });
 

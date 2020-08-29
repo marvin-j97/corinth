@@ -32,7 +32,7 @@ ava.serial("Enqueue item to non-existing queue", async (t) => {
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
   t.is(res.status, 201);
-  t.is(res.data.result.message, "Queue created");
+  t.is(res.data.message, "Queue created successfully");
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -45,12 +45,12 @@ ava.serial("Enqueue item", async (t) => {
   const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
   t.is(res.status, 201);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.result.message, "Message has been enqueued");
+  t.is(res.data.message, "Message has been enqueued successfully");
   t.is(typeof res.data.result.item, "object");
   t.is(typeof res.data.result.item.id, "string");
   t.is(typeof res.data.result.item.queued_at, "number");
   t.deepEqual(res.data.result.item.item, testItem);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.item).length, 3);
 });
 
@@ -75,9 +75,9 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
   for (let i = 0; i < NUM_ITEMS; i++) {
     const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
     t.is(res.status, 202);
-    t.is(typeof res.data.result, "object");
-    t.is(res.data.result.message, "Message has been discarded");
-    t.is(Object.keys(res.data.result).length, 1);
+    t.is(res.data.message, "Message has been discarded");
+    t.is(res.data.result, null);
+    t.is(Object.keys(res.data).length, 2);
   }
 });
 

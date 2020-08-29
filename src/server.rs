@@ -37,7 +37,7 @@ pub fn create_server() -> Nickel {
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
         }
-      }))
+      }), String::from("Info retrieved successfully"))
     },
   );
 
@@ -53,7 +53,7 @@ pub fn create_server() -> Nickel {
           "items": queue_names,
           "length": queue_names.len(),
         }
-      }))
+      }), String::from("Queue list retrieved successfully"))
     },
   );
 
@@ -74,7 +74,7 @@ pub fn create_server() -> Nickel {
             "num_done": queue.num_done(),
             "num_dedup_hits": queue.num_dedup_hits(),
           }
-        }))
+        }), String::from("Queue info retrieved successfully"))
       }
       else {
         error(&mut res, StatusCode::NotFound, "Queue not found")
@@ -112,15 +112,12 @@ pub fn create_server() -> Nickel {
         if msg.is_some() {
           // Enqueued message
           success(&mut res, StatusCode::Created, json!({
-            "message": "Message has been enqueued",
             "item": msg.unwrap(),
-          }))
+          }), String::from("Message has been enqueued successfully"))
         }
         else {
           // Message deduplicated
-          success(&mut res, StatusCode::Accepted, json!({
-            "message": "Message has been discarded"
-          }))
+          success(&mut res, StatusCode::Accepted, json!(null), String::from("Message has been discarded"))
         }
       }
       else {
@@ -140,10 +137,10 @@ pub fn create_server() -> Nickel {
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()
-          }))
+          }), String::from("Message retrieved successfully")) // TODO: change message based on ?ack=true
         }
         else {
-          success(&mut res, StatusCode::Ok, json!(null))
+          success(&mut res, StatusCode::Ok, json!(null), String::from("Queue is empty"))
         }
       }
       else {
@@ -162,10 +159,10 @@ pub fn create_server() -> Nickel {
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()
-          }))
+          }), String::from("Message retrieved successfully"))
         }
         else {
-          success(&mut res, StatusCode::Ok, json!(null))
+          success(&mut res, StatusCode::Ok, json!(null), String::from("Queue is empty"))
         }
       }
       else {
@@ -184,9 +181,7 @@ pub fn create_server() -> Nickel {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue_name = String::from(req.param("queue_name").unwrap());
         queue_map.insert(queue_name, Queue::new());
-        success(&mut res, StatusCode::Created, json!({
-          "message": "Queue created"
-        }))
+        success(&mut res, StatusCode::Created, json!(null), String::from("Queue created successfully"))
       }
     },
   );

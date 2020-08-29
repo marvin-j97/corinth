@@ -26,7 +26,7 @@ ava.serial("Peek queue head -> no queue", async (t) => {
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, axiosConfig);
   t.is(res.status, 201);
-  t.is(res.data.result.message, "Queue created");
+  t.is(res.data.message, "Queue created successfully");
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -39,6 +39,7 @@ ava.serial("Peek queue head -> empty queue", async (t) => {
   const res = await Axios.get(peekUrl, axiosConfig);
   t.is(res.status, 200);
   t.deepEqual(res.data, {
+    message: "Queue is empty",
     result: null,
   });
 });
@@ -57,12 +58,12 @@ ava.serial("Enqueue item", async (t) => {
   );
   t.is(res.status, 201);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.result.message, "Message has been enqueued");
+  t.is(res.data.message, "Message has been enqueued successfully");
   t.is(typeof res.data.result.item, "object");
   t.is(typeof res.data.result.item.id, "string");
   t.is(typeof res.data.result.item.queued_at, "number");
   t.deepEqual(res.data.result.item.item, item0);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.item).length, 3);
 });
 
@@ -119,12 +120,12 @@ ava.serial("Enqueue item again", async (t) => {
   );
   t.is(res.status, 201);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.result.message, "Message has been enqueued");
+  t.is(res.data.message, "Message has been enqueued successfully");
   t.is(typeof res.data.result.item, "object");
   t.is(typeof res.data.result.item.id, "string");
   t.is(typeof res.data.result.item.queued_at, "number");
   t.deepEqual(res.data.result.item.item, item1);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.item).length, 3);
 });
 

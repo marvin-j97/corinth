@@ -5,6 +5,7 @@ use serde_json::Value;
 #[derive(Serialize, Deserialize)]
 struct SuccessResponse {
   result: Value,
+  message: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -17,9 +18,10 @@ pub fn success(
   res: &mut Response,
   status: StatusCode,
   result: Value,
+  message: String,
 ) -> Result<Value, (nickel::status::StatusCode, serde_json::error::Error)> {
   res.set(status);
-  let res_body = SuccessResponse { result };
+  let res_body = SuccessResponse { result, message };
   serde_json::to_value(res_body).map_err(|e| (StatusCode::InternalServerError, e))
 }
 

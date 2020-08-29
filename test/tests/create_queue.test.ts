@@ -24,7 +24,7 @@ ava.serial("Queue shouldn't exist", async (t) => {
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
   t.is(res.status, 201);
-  t.is(res.data.result.message, "Queue created");
+  t.is(res.data.message, "Queue created successfully");
 });
 
 ava.serial("Queue should be empty", async (t) => {
