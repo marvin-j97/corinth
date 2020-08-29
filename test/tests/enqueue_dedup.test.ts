@@ -23,7 +23,11 @@ const reqBody = {
   item: testItem,
 };
 
-// TODO: enqueue item before queue exists
+ava.serial("Enqueue item to non-existing queue", async (t) => {
+  const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
+  t.is(res.status, 404);
+  t.is(res.data, "Not Found");
+});
 
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
