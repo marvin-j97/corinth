@@ -184,7 +184,9 @@ pub fn create_server() -> Nickel {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue_name = String::from(req.param("queue_name").unwrap());
         queue_map.insert(queue_name, Queue::new());
-        success(&mut res, StatusCode::Created, json!(null))
+        success(&mut res, StatusCode::Created, json!({
+          "message": "Queue created"
+        }))
       }
     },
   );

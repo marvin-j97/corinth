@@ -32,6 +32,7 @@ ava.serial("Enqueue item to non-existing queue", async (t) => {
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
   t.is(res.status, 201);
+  t.is(res.data.result.message, "Queue created");
 });
 
 ava.serial("Queue should be empty", async (t) => {
