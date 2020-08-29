@@ -34,6 +34,11 @@ impl Queue {
     };
   }
 
+  pub fn purge_dedup_items(&mut self) {
+    let now = timestamp();
+    self.dedup_map.retain(|_key, x| x.expires_at > now);
+  }
+
   // Checks if the given dedup id is already being tracked
   // If not, it will be tracked
   // Returns true if the id was not originally tracked, false otherwise
@@ -45,8 +50,9 @@ impl Queue {
         self.num_dedup_hits += 1;
         return false;
       }
+      let lifetime = min_to_secs(5);
       let dedup_item = DedupItem {
-        expires_at: timestamp() + min_to_secs(5),
+        expires_at: timestamp() + lifetime,
       };
       self.dedup_map.insert(d_id, dedup_item);
     }
