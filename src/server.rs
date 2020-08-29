@@ -86,32 +86,41 @@ pub fn create_server() -> Nickel {
     "/queue/:queue_name/enqueue",
     middleware! { |req, mut res|
       let body = try_with!(res, {
-          req.json_as::<EnqueueBody>().map_err(|e| (StatusCode::BadRequest, e))
+        req.json_as::<EnqueueBody>().map_err(|e| (StatusCode::BadRequest, e))
       });
-      if body.item.is_object() {
-        if queue_exists(req) {
-          let mut queue_map = QUEUES.lock().unwrap();
-          let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-          let dedup_id = req.query().get("deduplication_id");
-          let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None };
-          let msg = queue.try_enqueue(body.item, dedup_id_as_string);
-          if msg.is_some() {
-            // Enqueued message
-            success(&mut res, StatusCode::Created, json!({
-              "message": "Message has been enqueued",
-              "item": msg.unwrap(),
-            }))
+      
+      if body.item.is_object() {        
+        let queue_name = String::from(req.param("queue_name").unwrap());
+
+        if !queue_exists(req) {
+          let create_queue = req.query().get("create_queue");
+          let create_queue_as_string = if create_queue.is_some() { Some(String::from(create_queue.unwrap())) } else { None };
+          if create_queue.is_some() && create_queue_as_string.unwrap() == "true" {
+            let mut queue_map = QUEUES.lock().unwrap();
+            queue_map.insert(queue_name.clone(), Queue::new());
           }
           else {
-            // Message deduplicated
-            success(&mut res, StatusCode::Accepted, json!({
-              "message": "Message has been discarded"
-            }))
+            return res.error(StatusCode::NotFound, "Queue not found");
           }
         }
+
+        let mut queue_map = QUEUES.lock().unwrap();
+        let queue = queue_map.get_mut(&queue_name).unwrap();
+        let dedup_id = req.query().get("deduplication_id");
+        let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None };
+        let msg = queue.try_enqueue(body.item, dedup_id_as_string);
+        if msg.is_some() {
+          // Enqueued message
+          success(&mut res, StatusCode::Created, json!({
+            "message": "Message has been enqueued",
+            "item": msg.unwrap(),
+          }))
+        }
         else {
-          // TODO: check ?create_queue=true
-          error(&mut res, StatusCode::NotFound, "Queue not found")
+          // Message deduplicated
+          success(&mut res, StatusCode::Accepted, json!({
+            "message": "Message has been discarded"
+          }))
         }
       }
       else {
