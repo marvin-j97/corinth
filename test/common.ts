@@ -13,7 +13,8 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
 export function validateEmptyQueueResponse(
   t: ExecutionContext,
   queueName: string,
-  res: AxiosResponse
+  res: AxiosResponse,
+  numAcknowledged = 0
 ) {
   t.is(typeof res.data.result, "object");
   t.is(typeof res.data.result.queue, "object");
@@ -22,7 +23,7 @@ export function validateEmptyQueueResponse(
   t.is(res.data.result.queue.size, 0);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_done, 0);
+  t.is(res.data.result.queue.num_acknowledged, numAcknowledged);
   t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.queue).length, 6);
 }

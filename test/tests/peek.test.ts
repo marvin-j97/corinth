@@ -77,7 +77,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_done, 0);
+  t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.queue).length, 6);
 });
@@ -101,7 +101,7 @@ ava.serial("1 item should still be queued", async (t) => {
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_done, 0);
+  t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.queue).length, 6);
 });
@@ -139,7 +139,7 @@ ava.serial("2 items should be queued", async (t) => {
   t.is(res.data.result.queue.size, 2);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_done, 0);
+  t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.queue).length, 6);
 });
@@ -163,7 +163,7 @@ ava.serial("2 items should still be queued", async (t) => {
   t.is(res.data.result.queue.size, 2);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_done, 0);
+  t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
   t.is(Object.keys(res.data.result.queue).length, 6);
 });

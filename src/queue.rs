@@ -17,7 +17,7 @@ struct DedupItem {
 pub struct Queue {
   items: VecDeque<Message>,
   dedup_map: HashMap<String, DedupItem>,
-  num_done: u64,
+  num_acknowledged: u64,
   num_dedup_hits: u64,
   created_at: u64,
 }
@@ -29,7 +29,7 @@ impl Queue {
       items: VecDeque::new(),
       dedup_map: HashMap::new(),
       num_dedup_hits: 0,
-      num_done: 0,
+      num_acknowledged: 0,
       created_at: timestamp(),
     };
   }
@@ -90,11 +90,16 @@ impl Queue {
   }
 
   // Removes and returns the first element
-  pub fn dequeue(&mut self, peek: bool) -> Option<Message> {
+  pub fn dequeue(&mut self, peek: bool, auto_ack: bool) -> Option<Message> {
     let item_maybe = self.peek();
     if item_maybe.is_some() {
       if !peek {
         self.items.pop_front();
+        if auto_ack {
+          self.num_acknowledged += 1;
+        } else {
+          // TODO:
+        }
       }
       return item_maybe;
     }
@@ -107,8 +112,8 @@ impl Queue {
   }
 
   // Returns the amount of successfully acknowledges messages
-  pub fn num_done(&self) -> u64 {
-    self.num_done
+  pub fn num_acknowledged(&self) -> u64 {
+    self.num_acknowledged
   }
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {

@@ -71,7 +71,7 @@ pub fn create_server() -> Nickel {
             "created_at": queue.created_at(),
             "size": queue.size(),
             "num_deduped": queue.deduped_size(),
-            "num_done": queue.num_done(),
+            "num_acknowledged": queue.num_acknowledged(),
             "num_dedup_hits": queue.num_dedup_hits(),
           }
         }), String::from("Queue info retrieved successfully"))
@@ -132,8 +132,8 @@ pub fn create_server() -> Nickel {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        // TODO: check ?ack=true
-        let message = queue.dequeue(false);
+        let auto_ack = req.query().get("ack");
+        let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()
@@ -155,7 +155,7 @@ pub fn create_server() -> Nickel {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let message = queue.dequeue(true);
+        let message = queue.dequeue(true, false);
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()
