@@ -48,7 +48,7 @@ impl Queue {
         self.num_dedup_hits += 1;
         return false;
       }
-      let lifetime = min_to_secs(5); // TODO: env variable
+      let lifetime = min_to_secs(5); // TODO: env variable or property in queue
       self.dedup_set.insert(d_id.clone());
       let this_id = self.id.clone();
       // Start timeout thread to remove item from dedup map
@@ -107,7 +107,7 @@ impl Queue {
           // Start timeout thread to remove item from ack map & back into queue
           let message = item_maybe.clone().unwrap();
           let message_id = message.id.clone();
-          let lifetime = min_to_secs(5); // TODO: env variable
+          let lifetime = min_to_secs(5); // TODO: env variable or property in queue
           self.ack_map.insert(message_id.clone(), message);
           let this_id = self.id.clone();
           thread::spawn(move || {
