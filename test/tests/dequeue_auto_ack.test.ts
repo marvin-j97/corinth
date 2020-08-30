@@ -111,3 +111,5 @@ ava.serial("Dequeue queue head -> empty queue again", async (t) => {
     result: null,
   });
 });
+
+// TODO: set ack time very low, wait and then dequeue again -> queue should still be empty
