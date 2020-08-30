@@ -16,9 +16,7 @@ use port::get_port;
 
 fn main() {
   create_data_folder();
-
-  let port = get_port();
   create_server()
-    .listen(format!("127.0.0.1:{}", port))
+    .listen(format!("127.0.0.1:{}", get_port()))
     .expect("Fatal error");
 }
