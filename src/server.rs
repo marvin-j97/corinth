@@ -97,7 +97,7 @@ pub fn create_server() -> Nickel {
           let create_queue_as_string = if create_queue.is_some() { Some(String::from(create_queue.unwrap())) } else { None };
           if create_queue.is_some() && create_queue_as_string.unwrap() == "true" {
             let mut queue_map = QUEUES.lock().unwrap();
-            queue_map.insert(queue_name.clone(), Queue::new());
+            queue_map.insert(queue_name.clone(), Queue::new(queue_name.clone()));
           }
           else {
             return res.error(StatusCode::NotFound, "Queue not found");
@@ -180,7 +180,7 @@ pub fn create_server() -> Nickel {
       else {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue_name = String::from(req.param("queue_name").unwrap());
-        queue_map.insert(queue_name, Queue::new());
+        queue_map.insert(queue_name.clone(), Queue::new(queue_name));
         success(&mut res, StatusCode::Created, json!(null), String::from("Queue created successfully"))
       }
     },

@@ -1,7 +1,10 @@
 use crate::date::{min_to_secs, timestamp};
+use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
+use std::thread;
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Message {
@@ -15,8 +18,10 @@ struct DedupItem {
 }
 
 pub struct Queue {
+  id: String,
   items: VecDeque<Message>,
   dedup_map: HashMap<String, DedupItem>,
+  ack_map: HashMap<String, Message>,
   num_acknowledged: u64,
   num_dedup_hits: u64,
   created_at: u64,
@@ -24,10 +29,12 @@ pub struct Queue {
 
 impl Queue {
   // Create a new empty queue
-  pub fn new() -> Queue {
+  pub fn new(id: String) -> Queue {
     return Queue {
+      id,
       items: VecDeque::new(),
       dedup_map: HashMap::new(),
+      ack_map: HashMap::new(),
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
@@ -50,11 +57,21 @@ impl Queue {
         self.num_dedup_hits += 1;
         return false;
       }
-      let lifetime = min_to_secs(5);
+      let lifetime = min_to_secs(5); // TODO: env variable
       let dedup_item = DedupItem {
         expires_at: timestamp() + lifetime,
       };
-      self.dedup_map.insert(d_id, dedup_item);
+      self.dedup_map.insert(d_id.clone(), dedup_item);
+      let this_id = self.id.clone();
+      thread::spawn(move || {
+        thread::sleep(Duration::from_secs(lifetime));
+        let mut queue_map = QUEUES.lock().unwrap();
+        let this_queue = queue_map.get_mut(&this_id);
+        if this_queue.is_some() {
+          let queue = this_queue.unwrap();
+          queue.dedup_map.remove(&d_id);
+        }
+      });
     }
     true
   }
@@ -98,12 +115,27 @@ impl Queue {
         if auto_ack {
           self.num_acknowledged += 1;
         } else {
-          // TODO:
+          // Start timeout thread to remove item from ack map & back into queue
+          let message = item_maybe.clone().unwrap();
+          let message_id = message.id.clone();
+          let lifetime = min_to_secs(5); // TODO: env variable
+          self.ack_map.insert(message_id.clone(), message);
+          let this_id = self.id.clone();
+          thread::spawn(move || {
+            thread::sleep(Duration::from_secs(lifetime));
+            let mut queue_map = QUEUES.lock().unwrap();
+            let this_queue = queue_map.get_mut(&this_id);
+            if this_queue.is_some() {
+              let queue = this_queue.unwrap();
+              let message = queue.ack_map.remove(&message_id);
+              queue.items.push_back(message.unwrap());
+            }
+          });
         }
       }
       return item_maybe;
     }
-    return None;
+    None
   }
 
   // Returns the size of the queue
