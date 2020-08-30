@@ -2,7 +2,7 @@ use crate::date::{min_to_secs, timestamp};
 use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::thread;
 use std::time::Duration;
 
@@ -13,14 +13,10 @@ pub struct Message {
   item: Value,
 }
 
-struct DedupItem {
-  expires_at: u64,
-}
-
 pub struct Queue {
   id: String,
   items: VecDeque<Message>,
-  dedup_map: HashMap<String, DedupItem>,
+  dedup_set: HashSet<String>,
   ack_map: HashMap<String, Message>,
   num_acknowledged: u64,
   num_dedup_hits: u64,
@@ -33,17 +29,12 @@ impl Queue {
     return Queue {
       id,
       items: VecDeque::new(),
-      dedup_map: HashMap::new(),
+      dedup_set: HashSet::new(),
       ack_map: HashMap::new(),
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
     };
-  }
-
-  pub fn purge_dedup_items(&mut self) {
-    let now = timestamp();
-    self.dedup_map.retain(|_key, x| x.expires_at > now);
   }
 
   // Checks if the given dedup id is already being tracked
@@ -52,24 +43,23 @@ impl Queue {
   fn register_dedup_id(&mut self, dedup_id: Option<String>) -> bool {
     if dedup_id.is_some() {
       let d_id = dedup_id.unwrap();
-      let dedup_in_map = self.dedup_map.get(&d_id);
-      if dedup_in_map.is_some() && dedup_in_map.unwrap().expires_at > timestamp() {
+      let dedup_in_map = self.dedup_set.contains(&d_id);
+      if dedup_in_map {
         self.num_dedup_hits += 1;
         return false;
       }
       let lifetime = min_to_secs(5); // TODO: env variable
-      let dedup_item = DedupItem {
-        expires_at: timestamp() + lifetime,
-      };
-      self.dedup_map.insert(d_id.clone(), dedup_item);
+      self.dedup_set.insert(d_id.clone());
+      // TODO: env variable
       let this_id = self.id.clone();
+      // Start timeout thread to remove item from dedup map
       thread::spawn(move || {
         thread::sleep(Duration::from_secs(lifetime));
         let mut queue_map = QUEUES.lock().unwrap();
         let this_queue = queue_map.get_mut(&this_id);
         if this_queue.is_some() {
           let queue = this_queue.unwrap();
-          queue.dedup_map.remove(&d_id);
+          queue.dedup_set.remove(&d_id);
         }
       });
     }
@@ -159,6 +149,6 @@ impl Queue {
 
   // Returns the amount of deduplication ids currently being tracked
   pub fn deduped_size(&self) -> usize {
-    self.dedup_map.len()
+    self.dedup_set.len()
   }
 }
