@@ -50,7 +50,6 @@ impl Queue {
       }
       let lifetime = min_to_secs(5); // TODO: env variable
       self.dedup_set.insert(d_id.clone());
-      // TODO: env variable
       let this_id = self.id.clone();
       // Start timeout thread to remove item from dedup map
       thread::spawn(move || {
