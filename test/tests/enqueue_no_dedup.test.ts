@@ -59,10 +59,11 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 0);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 });
 
 const NUM_ITEMS = 10;
@@ -91,8 +92,9 @@ ava.serial(`${NUM_ITEMS + 1} items should be queued`, async (t) => {
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, NUM_ITEMS + 1);
   t.is(res.data.result.queue.num_deduped, 0);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 });

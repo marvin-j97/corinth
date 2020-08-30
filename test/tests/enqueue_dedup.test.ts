@@ -63,10 +63,11 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 1);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 });
 
 const NUM_ITEMS = 10;
@@ -90,10 +91,11 @@ ava.serial("1 item should be queued, still", async (t) => {
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 1);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, NUM_ITEMS);
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 });
 
 // TODO: set DEDUP_TIME to ~5 secs, wait until dedup runs out and enqueue again

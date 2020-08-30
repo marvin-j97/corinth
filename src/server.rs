@@ -70,7 +70,8 @@ pub fn create_server() -> Nickel {
             "name": queue_name,
             "created_at": queue.created_at(),
             "size": queue.size(),
-            "num_deduped": queue.deduped_size(),
+            "num_deduped": queue.dedup_size(),
+            "num_unacked": queue.ack_size(),
             "num_acknowledged": queue.num_acknowledged(),
             "num_dedup_hits": queue.num_dedup_hits(),
           }

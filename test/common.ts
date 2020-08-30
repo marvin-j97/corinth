@@ -22,8 +22,9 @@ export function validateEmptyQueueResponse(
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, 0);
   t.is(res.data.result.queue.num_deduped, 0);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, numAcknowledged);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 }

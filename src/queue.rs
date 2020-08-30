@@ -136,6 +136,7 @@ impl Queue {
   pub fn num_acknowledged(&self) -> u64 {
     self.num_acknowledged
   }
+
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {
     self.created_at
@@ -147,7 +148,12 @@ impl Queue {
   }
 
   // Returns the amount of deduplication ids currently being tracked
-  pub fn deduped_size(&self) -> usize {
+  pub fn dedup_size(&self) -> usize {
     self.dedup_set.len()
+  }
+
+  // Returns the amount of unacknowledged messages currently being tracked
+  pub fn ack_size(&self) -> usize {
+    self.ack_map.len()
   }
 }
