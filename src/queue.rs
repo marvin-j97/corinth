@@ -1,4 +1,4 @@
-use crate::date::{min_to_secs, timestamp};
+use crate::date::timestamp;
 use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
@@ -15,17 +15,22 @@ pub struct Message {
 
 pub struct Queue {
   id: String,
+
   items: VecDeque<Message>,
   dedup_set: HashSet<String>,
   ack_map: HashMap<String, Message>,
+
+  created_at: u64,
   num_acknowledged: u64,
   num_dedup_hits: u64,
-  created_at: u64,
+
+  ack_time: u32,
+  dedup_time: u32,
 }
 
 impl Queue {
   // Create a new empty queue
-  pub fn new(id: String) -> Queue {
+  pub fn new(id: String, ack_time: u32, dedup_time: u32) -> Queue {
     return Queue {
       id,
       items: VecDeque::new(),
@@ -34,6 +39,8 @@ impl Queue {
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
+      ack_time,
+      dedup_time,
     };
   }
 
@@ -61,9 +68,11 @@ impl Queue {
         self.num_dedup_hits += 1;
         return false;
       }
-      let lifetime = min_to_secs(5); // TODO: env variable or property in queue
+      let lifetime = self.dedup_time.into();
       self.dedup_set.insert(d_id.clone());
-      self.schedule_dedup_item(d_id, lifetime);
+      if lifetime > 0 {
+        self.schedule_dedup_item(d_id, lifetime);
+      }
     }
     true
   }
@@ -125,8 +134,10 @@ impl Queue {
           self.num_acknowledged += 1;
         } else {
           let message = item_maybe.clone().unwrap();
-          let lifetime = min_to_secs(5); // TODO: env variable or property in queue
-          self.schedule_ack_item(message, lifetime);
+          let lifetime = self.ack_time.into();
+          if lifetime > 0 {
+            self.schedule_ack_item(message, lifetime);
+          }
         }
       }
       return item_maybe;

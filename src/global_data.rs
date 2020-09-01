@@ -20,6 +20,19 @@ pub fn queue_exists(req: &mut Request) -> bool {
   queue_maybe.is_some()
 }
 
+pub fn try_env_to_uint(name: String) -> Option<u64> {
+  let str_value = env::var(name).ok();
+  if str_value.is_some() {
+    return Some(
+      str_value
+        .unwrap()
+        .parse::<u64>()
+        .expect("Invalid env variable!"),
+    );
+  }
+  None
+}
+
 pub fn data_folder() -> String {
   env::var("CORINTH_BASE_FOLDER").unwrap_or(String::from(".corinth"))
 }

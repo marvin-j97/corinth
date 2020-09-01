@@ -7,7 +7,7 @@ export function queueUrl(name: string) {
 }
 
 export function createQueue(name: string, opts?: AxiosRequestConfig) {
-  return Axios.put(queueUrl(name), opts);
+  return Axios.put(queueUrl(name), null, opts);
 }
 
 export function validateEmptyQueueResponse(

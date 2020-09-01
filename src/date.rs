@@ -13,10 +13,6 @@ pub fn timestamp() -> u64 {
     .as_secs()
 }
 
-pub fn min_to_secs(min: u64) -> u64 {
-  min * 60
-}
-
 pub fn elapsed_secs(start_time: Instant) -> u64 {
   start_time.elapsed().as_secs()
 }

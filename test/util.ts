@@ -24,3 +24,7 @@ export function unixToHammer(unix: number) {
 export const NO_FAIL = () => ({
   validateStatus: () => true,
 });
+
+export function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
