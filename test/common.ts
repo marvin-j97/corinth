@@ -14,7 +14,9 @@ export function validateEmptyQueueResponse(
   t: ExecutionContext,
   queueName: string,
   res: AxiosResponse,
-  numAcknowledged = 0
+  numAcknowledged = 0,
+  ack_time = 300,
+  dedup_time = 300
 ) {
   t.is(typeof res.data.result, "object");
   t.is(typeof res.data.result.queue, "object");
@@ -25,6 +27,8 @@ export function validateEmptyQueueResponse(
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, numAcknowledged);
+  t.is(res.data.result.queue.dedup_time, dedup_time);
+  t.is(res.data.result.queue.ack_time, ack_time);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
 }

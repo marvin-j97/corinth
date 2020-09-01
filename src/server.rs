@@ -74,6 +74,8 @@ pub fn create_server() -> Nickel {
             "num_unacked": queue.ack_size(),
             "num_acknowledged": queue.num_acknowledged(),
             "num_dedup_hits": queue.num_dedup_hits(),
+            "dedup_time": queue.dedup_time(),
+            "ack_time": queue.ack_time(),
           }
         }), String::from("Queue info retrieved successfully"))
       }

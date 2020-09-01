@@ -43,7 +43,7 @@ ava.serial("Create queue", async (t) => {
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
   t.is(res.status, 200);
-  validateEmptyQueueResponse(t, queueName, res);
+  validateEmptyQueueResponse(t, queueName, res, 0, 300, 3);
 });
 
 ava.serial("Enqueue first item", async (t) => {
@@ -81,8 +81,10 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 5);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 3);
+  t.is(res.data.result.queue.ack_time, 300);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
   await sleep(3000);
 });
 
@@ -98,8 +100,10 @@ ava.serial("1 item should be queued, but no dedup anymore", async (t) => {
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 5);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 3);
+  t.is(res.data.result.queue.ack_time, 300);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
 });
 
 ava.serial("Enqueue item after dedup expired", async (t) => {
@@ -127,6 +131,8 @@ ava.serial("2 items should be queued", async (t) => {
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 5);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 3);
+  t.is(res.data.result.queue.ack_time, 300);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
 });

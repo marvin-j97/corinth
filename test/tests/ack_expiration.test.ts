@@ -39,7 +39,7 @@ ava.serial("Create queue", async (t) => {
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
   t.is(res.status, 200);
-  validateEmptyQueueResponse(t, queueName, res);
+  validateEmptyQueueResponse(t, queueName, res, 0, 3);
 });
 
 ava.serial("Dequeue queue head -> empty queue", async (t) => {
@@ -86,8 +86,10 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 300);
+  t.is(res.data.result.queue.ack_time, 3);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
@@ -111,8 +113,10 @@ ava.serial("1 item should be unacked", async (t) => {
   t.is(res.data.result.queue.num_unacked, 1);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 300);
+  t.is(res.data.result.queue.ack_time, 3);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
   await sleep(3000);
 });
 
@@ -128,6 +132,8 @@ ava.serial("1 item should be queued again", async (t) => {
   t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
+  t.is(res.data.result.queue.dedup_time, 300);
+  t.is(res.data.result.queue.ack_time, 3);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 7);
+  t.is(Object.keys(res.data.result.queue).length, 9);
 });

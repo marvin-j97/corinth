@@ -174,4 +174,12 @@ impl Queue {
   pub fn ack_size(&self) -> usize {
     self.ack_map.len()
   }
+
+  pub fn dedup_time(&self) -> u32 {
+    self.dedup_time
+  }
+
+  pub fn ack_time(&self) -> u32 {
+    self.ack_time
+  }
 }
