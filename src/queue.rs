@@ -119,7 +119,9 @@ impl Queue {
       if this_queue.is_some() {
         let queue = this_queue.unwrap();
         let message = queue.ack_map.remove(&message_id);
-        queue.items.push_back(message.unwrap());
+        if message.is_some() {
+          queue.items.push_back(message.unwrap());
+        }
       }
     });
   }
