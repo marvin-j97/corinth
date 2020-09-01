@@ -1,7 +1,10 @@
-use crate::date::{min_to_secs, timestamp};
+use crate::date::timestamp;
+use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::thread;
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Message {
@@ -10,33 +13,48 @@ pub struct Message {
   item: Value,
 }
 
-struct DedupItem {
-  expires_at: u64,
-}
-
 pub struct Queue {
+  id: String,
+
   items: VecDeque<Message>,
-  dedup_map: HashMap<String, DedupItem>,
+  dedup_set: HashSet<String>,
+  ack_map: HashMap<String, Message>,
+
+  created_at: u64,
   num_acknowledged: u64,
   num_dedup_hits: u64,
-  created_at: u64,
+
+  ack_time: u32,
+  dedup_time: u32,
 }
 
 impl Queue {
   // Create a new empty queue
-  pub fn new() -> Queue {
+  pub fn new(id: String, ack_time: u32, dedup_time: u32) -> Queue {
     return Queue {
+      id,
       items: VecDeque::new(),
-      dedup_map: HashMap::new(),
+      dedup_set: HashSet::new(),
+      ack_map: HashMap::new(),
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
+      ack_time,
+      dedup_time,
     };
   }
 
-  pub fn purge_dedup_items(&mut self) {
-    let now = timestamp();
-    self.dedup_map.retain(|_key, x| x.expires_at > now);
+  // Start timeout thread to remove item from dedup map
+  fn schedule_dedup_item(&mut self, id: String, lifetime: u64) {
+    let this_id = self.id.clone();
+    thread::spawn(move || {
+      thread::sleep(Duration::from_secs(lifetime));
+      let mut queue_map = QUEUES.lock().unwrap();
+      let this_queue = queue_map.get_mut(&this_id);
+      if this_queue.is_some() {
+        this_queue.unwrap().dedup_set.remove(&id);
+      }
+    });
   }
 
   // Checks if the given dedup id is already being tracked
@@ -45,16 +63,16 @@ impl Queue {
   fn register_dedup_id(&mut self, dedup_id: Option<String>) -> bool {
     if dedup_id.is_some() {
       let d_id = dedup_id.unwrap();
-      let dedup_in_map = self.dedup_map.get(&d_id);
-      if dedup_in_map.is_some() && dedup_in_map.unwrap().expires_at > timestamp() {
+      let dedup_in_map = self.dedup_set.contains(&d_id);
+      if dedup_in_map {
         self.num_dedup_hits += 1;
         return false;
       }
-      let lifetime = min_to_secs(5);
-      let dedup_item = DedupItem {
-        expires_at: timestamp() + lifetime,
-      };
-      self.dedup_map.insert(d_id, dedup_item);
+      let lifetime = self.dedup_time.into();
+      self.dedup_set.insert(d_id.clone());
+      if lifetime > 0 {
+        self.schedule_dedup_item(d_id, lifetime);
+      }
     }
     true
   }
@@ -89,6 +107,23 @@ impl Queue {
     return None;
   }
 
+  // Start timeout thread to remove item from ack map & back into queue
+  fn schedule_ack_item(&mut self, message: Message, lifetime: u64) {
+    let message_id = message.id.clone();
+    self.ack_map.insert(message_id.clone(), message.clone());
+    let this_id = self.id.clone();
+    thread::spawn(move || {
+      thread::sleep(Duration::from_secs(lifetime));
+      let mut queue_map = QUEUES.lock().unwrap();
+      let this_queue = queue_map.get_mut(&this_id);
+      if this_queue.is_some() {
+        let queue = this_queue.unwrap();
+        let message = queue.ack_map.remove(&message_id);
+        queue.items.push_back(message.unwrap());
+      }
+    });
+  }
+
   // Removes and returns the first element
   pub fn dequeue(&mut self, peek: bool, auto_ack: bool) -> Option<Message> {
     let item_maybe = self.peek();
@@ -98,12 +133,16 @@ impl Queue {
         if auto_ack {
           self.num_acknowledged += 1;
         } else {
-          // TODO:
+          let message = item_maybe.clone().unwrap();
+          let lifetime = self.ack_time.into();
+          if lifetime > 0 {
+            self.schedule_ack_item(message, lifetime);
+          }
         }
       }
       return item_maybe;
     }
-    return None;
+    None
   }
 
   // Returns the size of the queue
@@ -115,6 +154,7 @@ impl Queue {
   pub fn num_acknowledged(&self) -> u64 {
     self.num_acknowledged
   }
+
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {
     self.created_at
@@ -126,7 +166,12 @@ impl Queue {
   }
 
   // Returns the amount of deduplication ids currently being tracked
-  pub fn deduped_size(&self) -> usize {
-    self.dedup_map.len()
+  pub fn dedup_size(&self) -> usize {
+    self.dedup_set.len()
+  }
+
+  // Returns the amount of unacknowledged messages currently being tracked
+  pub fn ack_size(&self) -> usize {
+    self.ack_map.len()
   }
 }

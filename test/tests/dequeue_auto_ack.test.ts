@@ -81,10 +81,11 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(typeof res.data.result.queue.created_at, "number");
   t.is(res.data.result.queue.size, 1);
   t.is(res.data.result.queue.num_deduped, 0);
+  t.is(res.data.result.queue.num_unacked, 0);
   t.is(res.data.result.queue.num_dedup_hits, 0);
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 6);
+  t.is(Object.keys(res.data.result.queue).length, 7);
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
@@ -110,3 +111,5 @@ ava.serial("Dequeue queue head -> empty queue again", async (t) => {
     result: null,
   });
 });
+
+// TODO: set ack time very low, wait and then dequeue again -> queue should still be empty

@@ -7,8 +7,13 @@ export const getUrl = (route: string) => IP + route;
 
 export function spawnCorinth() {
   const exeName = "corinth" + (platform() === "win32" ? ".exe" : "");
-  return execa(`../target/debug/${exeName}`, ["--port", PORT.toString()], {
+  const path = `../target/debug/${exeName}`;
+  console.error(`Spawning ${path} with port ${PORT}`);
+  return execa(path, {
     stdout: process.stdout,
+    env: {
+      CORINTH_PORT: PORT.toString(),
+    },
   });
 }
 
@@ -19,3 +24,7 @@ export function unixToHammer(unix: number) {
 export const NO_FAIL = () => ({
   validateStatus: () => true,
 });
+
+export function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
