@@ -37,6 +37,19 @@ impl Queue {
     };
   }
 
+  // Start timeout thread to remove item from dedup map
+  fn schedule_dedup_item(&mut self, id: String, lifetime: u64) {
+    let this_id = self.id.clone();
+    thread::spawn(move || {
+      thread::sleep(Duration::from_secs(lifetime));
+      let mut queue_map = QUEUES.lock().unwrap();
+      let this_queue = queue_map.get_mut(&this_id);
+      if this_queue.is_some() {
+        this_queue.unwrap().dedup_set.remove(&id);
+      }
+    });
+  }
+
   // Checks if the given dedup id is already being tracked
   // If not, it will be tracked
   // Returns true if the id was not originally tracked, false otherwise
@@ -50,17 +63,7 @@ impl Queue {
       }
       let lifetime = min_to_secs(5); // TODO: env variable or property in queue
       self.dedup_set.insert(d_id.clone());
-      let this_id = self.id.clone();
-      // Start timeout thread to remove item from dedup map
-      thread::spawn(move || {
-        thread::sleep(Duration::from_secs(lifetime));
-        let mut queue_map = QUEUES.lock().unwrap();
-        let this_queue = queue_map.get_mut(&this_id);
-        if this_queue.is_some() {
-          let queue = this_queue.unwrap();
-          queue.dedup_set.remove(&d_id);
-        }
-      });
+      self.schedule_dedup_item(d_id, lifetime);
     }
     true
   }
@@ -95,6 +98,23 @@ impl Queue {
     return None;
   }
 
+  // Start timeout thread to remove item from ack map & back into queue
+  fn schedule_ack_item(&mut self, message: Message, lifetime: u64) {
+    let message_id = message.id.clone();
+    self.ack_map.insert(message_id.clone(), message.clone());
+    let this_id = self.id.clone();
+    thread::spawn(move || {
+      thread::sleep(Duration::from_secs(lifetime));
+      let mut queue_map = QUEUES.lock().unwrap();
+      let this_queue = queue_map.get_mut(&this_id);
+      if this_queue.is_some() {
+        let queue = this_queue.unwrap();
+        let message = queue.ack_map.remove(&message_id);
+        queue.items.push_back(message.unwrap());
+      }
+    });
+  }
+
   // Removes and returns the first element
   pub fn dequeue(&mut self, peek: bool, auto_ack: bool) -> Option<Message> {
     let item_maybe = self.peek();
@@ -104,22 +124,9 @@ impl Queue {
         if auto_ack {
           self.num_acknowledged += 1;
         } else {
-          // Start timeout thread to remove item from ack map & back into queue
           let message = item_maybe.clone().unwrap();
-          let message_id = message.id.clone();
           let lifetime = min_to_secs(5); // TODO: env variable or property in queue
-          self.ack_map.insert(message_id.clone(), message);
-          let this_id = self.id.clone();
-          thread::spawn(move || {
-            thread::sleep(Duration::from_secs(lifetime));
-            let mut queue_map = QUEUES.lock().unwrap();
-            let this_queue = queue_map.get_mut(&this_id);
-            if this_queue.is_some() {
-              let queue = this_queue.unwrap();
-              let message = queue.ack_map.remove(&message_id);
-              queue.items.push_back(message.unwrap());
-            }
-          });
+          self.schedule_ack_item(message, lifetime);
         }
       }
       return item_maybe;
