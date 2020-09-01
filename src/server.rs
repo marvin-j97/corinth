@@ -126,7 +126,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
-  server.delete(
+  server.post(
     "/queue/:queue_name/dequeue",
     middleware! { |req, mut res|
       if queue_exists(req) {
