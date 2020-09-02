@@ -44,8 +44,10 @@ ava.serial("Dequeue queue head -> empty queue", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
   t.is(res.status, 200);
   t.deepEqual(res.data, {
-    message: "Queue is empty",
-    result: null,
+    message: "Request processed successfully",
+    result: {
+      items: [],
+    },
   });
 });
 
@@ -57,19 +59,19 @@ ava.serial("Enqueue item", async (t) => {
   const res = await Axios.post(
     queueUrl + "/enqueue",
     {
-      item: item0,
+      messages: [
+        {
+          item: item0,
+          deduplication_id: null,
+        },
+      ],
     },
     axiosConfig
   );
-  t.is(res.status, 201);
+  t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.message, "Message has been enqueued successfully");
-  t.is(typeof res.data.result.item, "object");
-  t.is(typeof res.data.result.item.id, "string");
-  t.is(typeof res.data.result.item.queued_at, "number");
-  t.deepEqual(res.data.result.item.item, item0);
+  t.is(res.data.result.num_enqueued, 1);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.item).length, 3);
 });
 
 ava.serial("1 item should be queued", async (t) => {
@@ -93,10 +95,12 @@ ava.serial("1 item should be queued", async (t) => {
 ava.serial("Dequeue queue head -> item0", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
   t.is(res.status, 200);
-  t.is(typeof res.data.result.item, "object");
-  t.is(typeof res.data.result.item.id, "string");
-  t.is(typeof res.data.result.item.queued_at, "number");
-  t.deepEqual(res.data.result.item.item, item0);
+  t.is(Array.isArray(res.data.result.items), true);
+  t.is(res.data.result.items.length, 1);
+  t.is(typeof res.data.result.items[0], "object");
+  t.is(typeof res.data.result.items[0].id, "string");
+  t.is(typeof res.data.result.items[0].queued_at, "number");
+  t.deepEqual(res.data.result.items[0].item, item0);
 });
 
 ava.serial("Queue should be empty again", async (t) => {
@@ -109,7 +113,9 @@ ava.serial("Dequeue queue head -> empty queue again", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
   t.is(res.status, 200);
   t.deepEqual(res.data, {
-    message: "Queue is empty",
-    result: null,
+    message: "Request processed successfully",
+    result: {
+      items: [],
+    },
   });
 });

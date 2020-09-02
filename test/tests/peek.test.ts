@@ -52,19 +52,19 @@ ava.serial("Enqueue item", async (t) => {
   const res = await Axios.post(
     queueUrl + "/enqueue",
     {
-      item: item0,
+      messages: [
+        {
+          item: item0,
+          deduplication_id: null,
+        },
+      ],
     },
     axiosConfig
   );
-  t.is(res.status, 201);
+  t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.message, "Message has been enqueued successfully");
-  t.is(typeof res.data.result.item, "object");
-  t.is(typeof res.data.result.item.id, "string");
-  t.is(typeof res.data.result.item.queued_at, "number");
-  t.deepEqual(res.data.result.item.item, item0);
+  t.is(res.data.result.num_enqueued, 1);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.item).length, 3);
 });
 
 ava.serial("1 item should be queued", async (t) => {
@@ -120,19 +120,19 @@ ava.serial("Enqueue item again", async (t) => {
   const res = await Axios.post(
     queueUrl + "/enqueue",
     {
-      item: item1,
+      messages: [
+        {
+          item: item1,
+          deduplication_id: null,
+        },
+      ],
     },
     axiosConfig
   );
-  t.is(res.status, 201);
+  t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.message, "Message has been enqueued successfully");
-  t.is(typeof res.data.result.item, "object");
-  t.is(typeof res.data.result.item.id, "string");
-  t.is(typeof res.data.result.item.queued_at, "number");
-  t.deepEqual(res.data.result.item.item, item1);
+  t.is(res.data.result.num_enqueued, 1);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.item).length, 3);
 });
 
 ava.serial("2 items should be queued", async (t) => {

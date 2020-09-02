@@ -16,7 +16,12 @@ const testItem = {
   description: "This is a test object!",
 };
 const reqBody = {
-  item: testItem,
+  messages: [
+    {
+      item: testItem,
+      deduplication_id: null,
+    },
+  ],
 };
 
 ava.serial("Enqueue item to non-existing queue", async (t) => {
@@ -39,15 +44,10 @@ ava.serial("Queue should be empty", async (t) => {
 
 ava.serial("Enqueue item", async (t) => {
   const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
-  t.is(res.status, 201);
+  t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
-  t.is(res.data.message, "Message has been enqueued successfully");
-  t.is(typeof res.data.result.item, "object");
-  t.is(typeof res.data.result.item.id, "string");
-  t.is(typeof res.data.result.item.queued_at, "number");
-  t.deepEqual(res.data.result.item.item, testItem);
+  t.is(res.data.result.num_enqueued, 1);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.item).length, 3);
 });
 
 ava.serial("1 item should be queued", async (t) => {
@@ -73,15 +73,10 @@ const NUM_ITEMS = 10;
 ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
   for (let i = 0; i < NUM_ITEMS; i++) {
     const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
-    t.is(res.status, 201);
+    t.is(res.status, 202);
     t.is(typeof res.data.result, "object");
-    t.is(res.data.message, "Message has been enqueued successfully");
-    t.is(typeof res.data.result.item, "object");
-    t.is(typeof res.data.result.item.id, "string");
-    t.is(typeof res.data.result.item.queued_at, "number");
-    t.deepEqual(res.data.result.item.item, testItem);
+    t.is(res.data.result.num_enqueued, 1);
     t.is(Object.keys(res.data.result).length, 1);
-    t.is(Object.keys(res.data.result.item).length, 3);
   }
 });
 

@@ -137,9 +137,9 @@ pub fn create_server() -> Nickel {
           }
         }
         
-        success(&mut res, StatusCode::Ok, json!({
+        success(&mut res, StatusCode::Accepted, json!({
           "num_enqueued": num_enqueued,
-        }), String::from("Request processed"))
+        }), String::from("Request processed successfully"))
       }
       else {
         error(&mut res, StatusCode::BadRequest, "body.items is required to be of type Array<Object>")
@@ -158,25 +158,30 @@ pub fn create_server() -> Nickel {
         let auto_ack = query.get("ack");
         let num_to_dequeue = query.get("amount").unwrap_or("1").parse::<u8>().map_err(|e| (StatusCode::BadRequest, e));
         let max = num_to_dequeue.unwrap();
-        
-        let mut dequeued_items: Vec<Message> = Vec::new();
-        
-        let mut i = 0;
 
-        while i < max {
-          let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
-          if message.is_some() {
-            dequeued_items.push(message.unwrap());
-            i += 1;
-          }
-          else {
-            break;
-          }
+        if max < 1 {
+          error(&mut res, StatusCode::BadRequest, "Invalid amount parameter")
         }
-
-        success(&mut res, StatusCode::Ok, json!({
-          "items": dequeued_items,
-        }), String::from("Messages retrieved successfully"))
+        else {
+          let mut dequeued_items: Vec<Message> = Vec::new();
+        
+          let mut i = 0;
+  
+          while i < max {
+            let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
+            if message.is_some() {
+              dequeued_items.push(message.unwrap());
+              i += 1;
+            }
+            else {
+              break;
+            }
+          }
+  
+          success(&mut res, StatusCode::Ok, json!({
+            "items": dequeued_items,
+          }), String::from("Request processed successfully"))
+        }
       }
       else {
         error(&mut res, StatusCode::NotFound, "Queue not found")
