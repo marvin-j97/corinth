@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test": "cd test && npm test"
+  }
+}
