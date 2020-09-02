@@ -1,3 +1,4 @@
+use crate::queue::Message;
 use crate::date::elapsed_secs;
 use crate::date::{iso_date, timestamp};
 use crate::global_data::{queue_exists, QUEUES};
@@ -10,8 +11,14 @@ use serde_json::{json, Value};
 use std::time::Instant;
 
 #[derive(Serialize, Deserialize)]
-struct EnqueueBody {
+struct NewItem {
   item: Value,
+  deduplication_id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct EnqueueBody {
+  messages: Vec<NewItem>,
 }
 
 pub fn create_server() -> Nickel {
@@ -91,8 +98,16 @@ pub fn create_server() -> Nickel {
       let body = try_with!(res, {
         req.json_as::<EnqueueBody>().map_err(|e| (StatusCode::BadRequest, e))
       });
+
+      let mut all_objects = true;
+
+      for item in body.messages.iter() {
+        if !item.item.is_object() {
+          all_objects = false;
+        }
+      }
       
-      if body.item.is_object() {        
+      if all_objects {
         let queue_name = String::from(req.param("queue_name").unwrap());
 
         if !queue_exists(req) {
@@ -109,22 +124,25 @@ pub fn create_server() -> Nickel {
 
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&queue_name).unwrap();
-        let dedup_id = req.query().get("deduplication_id");
-        let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.unwrap())) } else { None };
-        let msg = queue.try_enqueue(body.item, dedup_id_as_string);
-        if msg.is_some() {
-          // Enqueued message
-          success(&mut res, StatusCode::Created, json!({
-            "item": msg.unwrap(),
-          }), String::from("Message has been enqueued successfully"))
+
+        let mut num_enqueued = 0;
+
+        for item in body.messages.iter() {
+          let dup_item = item.clone();
+          let dedup_id = dup_item.deduplication_id.clone();
+          let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.clone().unwrap())) } else { None };
+          let msg = queue.try_enqueue(dup_item.item.clone(), dedup_id_as_string);
+          if msg.is_some() {
+            num_enqueued += 1;
+          }
         }
-        else {
-          // Message deduplicated
-          success(&mut res, StatusCode::Accepted, json!(null), String::from("Message has been discarded"))
-        }
+        
+        success(&mut res, StatusCode::Ok, json!({
+          "num_enqueued": num_enqueued,
+        }), String::from("Request processed"))
       }
       else {
-        error(&mut res, StatusCode::BadRequest, "body.item is required to be of type 'object'")
+        error(&mut res, StatusCode::BadRequest, "body.items is required to be of type Array<Object>")
       }
     },
   );
@@ -135,16 +153,30 @@ pub fn create_server() -> Nickel {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let auto_ack = req.query().get("ack");
-        let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
-        if message.is_some() {
-          success(&mut res, StatusCode::Ok, json!({
-            "item": message.unwrap()
-          }), String::from("Message retrieved successfully")) // TODO: change message based on ?ack=true
+
+        let query = req.query();
+        let auto_ack = query.get("ack");
+        let num_to_dequeue = query.get("amount").unwrap_or("1").parse::<u8>().map_err(|e| (StatusCode::BadRequest, e));
+        let max = num_to_dequeue.unwrap();
+        
+        let mut dequeued_items: Vec<Message> = Vec::new();
+        
+        let mut i = 0;
+
+        while i < max {
+          let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
+          if message.is_some() {
+            dequeued_items.push(message.unwrap());
+            i += 1;
+          }
+          else {
+            break;
+          }
         }
-        else {
-          success(&mut res, StatusCode::Ok, json!(null), String::from("Queue is empty"))
-        }
+
+        success(&mut res, StatusCode::Ok, json!({
+          "items": dequeued_items,
+        }), String::from("Messages retrieved successfully"))
       }
       else {
         error(&mut res, StatusCode::NotFound, "Queue not found")
