@@ -1,3 +1,6 @@
+use nickel::MiddlewareResult;
+use nickel::Response;
+use nickel::Request;
 use crate::queue::Message;
 use crate::date::elapsed_secs;
 use crate::date::{iso_date, timestamp};
@@ -8,6 +11,7 @@ use crate::response::{error, success};
 use nickel::status::StatusCode;
 use nickel::{HttpRouter, JsonBody, Nickel};
 use serde_json::{json, Value};
+use std::path::Path;
 use std::time::Instant;
 
 
@@ -22,6 +26,12 @@ struct EnqueueBody {
   messages: Vec<NewItem>,
 }
 
+fn favicon_handler<'a, D>(_: &mut Request<D>, res: Response<'a, D>) -> MiddlewareResult<'a, D> {
+  // https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html#foreground.type=clipart&foreground.clipart=settings_ethernet&foreground.space.trim=1&foreground.space.pad=0.45&foreColor=rgb(108%2C%20100%2C%2059)&backColor=rgb(231%2C%20216%2C%20139)&crop=0&backgroundShape=circle&effects=score&name=ic_launcher
+  let favicon = Path::new("assets/favicon.png");
+  res.send_file(favicon)
+}
+
 pub fn create_server() -> Nickel {
   let mut server = Nickel::new();
   let start_time = Instant::now();
@@ -30,6 +40,8 @@ pub fn create_server() -> Nickel {
   server.utilize(middleware! { |req|
     println!("{} {}: {}", req.origin.method.to_string(), req.origin.uri.to_string(), iso_date());
   });
+  
+  server.get("/favicon.ico", favicon_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -284,7 +296,7 @@ pub fn create_server() -> Nickel {
           let mut i = 0;
   
           while i < max {
-            let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
+            let message = queue.dequeue(auto_ack.is_some() && auto_ack.unwrap() == "true");
             if message.is_some() {
               dequeued_items.push(message.unwrap());
               i += 1;
@@ -322,7 +334,7 @@ pub fn create_server() -> Nickel {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let message = queue.dequeue(true, false);
+        let message = queue.peek();
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()

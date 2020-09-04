@@ -18,7 +18,7 @@ pub fn get_port() -> u16 {
   if num.is_some() {
     num.unwrap().try_into().expect("Invalid port value")
   } else {
-    6767
+    44444
   }
 }
 
