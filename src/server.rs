@@ -55,7 +55,7 @@ pub fn create_server() -> Nickel {
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
         }
-      }), String::from("Info retrieved successfully"))
+      }), String::from("Server info retrieved successfully"))
     },
   );
 
