@@ -4,8 +4,8 @@ use crate::{env::data_folder, global_data::QUEUES};
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs::{create_dir_all, rename, File};
-use std::io::{BufRead, BufReader};
+use std::fs::{create_dir_all, read_to_string, rename, File};
+use std::io::{BufRead, BufReader, Write};
 use std::mem::size_of;
 use std::thread;
 use std::time::Duration;
@@ -16,6 +16,15 @@ pub struct Message {
   queued_at: u64,
   item: Value,
 }
+#[derive(Serialize, Deserialize)]
+pub struct QueueMeta {
+  created_at: u64,
+  num_acknowledged: u64,
+  num_dedup_hits: u64,
+
+  ack_time: u32,
+  dedup_time: u32,
+}
 
 pub struct Queue {
   id: String,
@@ -24,12 +33,7 @@ pub struct Queue {
   dedup_set: HashSet<String>,
   ack_map: HashMap<String, Message>,
 
-  created_at: u64,
-  num_acknowledged: u64,
-  num_dedup_hits: u64,
-
-  ack_time: u32,
-  dedup_time: u32,
+  meta: QueueMeta,
 
   persistent: bool,
 }
@@ -38,6 +42,10 @@ pub struct Queue {
 // the queue is stored (items & metadata)
 fn get_queue_folder(id: &String) -> String {
   format!("{}/{}", data_folder(), id)
+}
+
+fn queue_meta_file(id: &String) -> String {
+  format!("{}/meta.json", get_queue_folder(&id))
 }
 
 // Returns the relative path to the persistent storage file
@@ -106,24 +114,27 @@ fn compact_file(write_file: &String, compact_to: &String, items: &VecDeque<Messa
   rename(write_file, &compact_to).expect("Failed to compact queue items");
 }
 
-// Initializes the queue's item queue
-// If it is persistent, it will try to read from disk
-// Otherwise it will be initialized as an empty queue
-fn init_items(id: &String, persistent: bool) -> VecDeque<Message> {
+// Initializes the queue's item queue from disk
+fn init_items(id: &String) -> VecDeque<Message> {
   let mut items: VecDeque<Message> = VecDeque::new();
 
-  if persistent {
-    let queue_item_file = queue_item_file(&id, String::from(""));
-    if file_exists(&get_queue_folder(&id)) && file_exists(&queue_item_file) {
-      items = read_file(&queue_item_file);
-      // Minimize file size
-      compact_file(&queue_temp_file(&id), &queue_item_file, &items);
-    } else {
-      create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
-    }
+  let queue_item_file = queue_item_file(&id, String::from(""));
+  if file_exists(&get_queue_folder(&id)) && file_exists(&queue_item_file) {
+    items = read_file(&queue_item_file);
+    // Minimize file size
+    compact_file(&queue_temp_file(&id), &queue_item_file, &items);
+  } else {
+    create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
   }
 
   items
+}
+
+fn write_metadata(id: &String, meta: &QueueMeta) {
+  let mut writer = File::create(queue_meta_file(&id)).expect("unable to create meta file");
+  writer
+    .write_all(serde_json::to_string(&meta).unwrap().as_bytes())
+    .expect("unable to write");
 }
 
 impl Queue {
@@ -134,20 +145,54 @@ impl Queue {
       + self.dedup_size() * size_of::<String>()
   }
 
-  // Create a new empty queue
-  pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
-    let items: VecDeque<Message> = init_items(&id, persistent);
-    // TODO: compact interval
-    return Queue {
-      id,
+  // Read queue from disk
+  pub fn from_disk(id: String) -> Queue {
+    let items: VecDeque<Message> = init_items(&id);
+    let mut queue = Queue {
+      id: id.clone(),
       items,
       dedup_set: HashSet::new(),
       ack_map: HashMap::new(),
+      meta: QueueMeta {
+        num_dedup_hits: 0,
+        num_acknowledged: 0,
+        created_at: timestamp(),
+        ack_time: 300,
+        dedup_time: 300,
+      },
+      persistent: true,
+    };
+    let metadata_file = queue_meta_file(&id);
+    if file_exists(&metadata_file) {
+      let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
+      let metadata: QueueMeta =
+        serde_json::from_str(&metadata).expect("Couldn't read metadata file");
+      queue.meta = metadata;
+    }
+    queue
+  }
+
+  // Create a new empty queue
+  pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
+    let items: VecDeque<Message> = VecDeque::new();
+    // TODO: compact interval
+    let meta = QueueMeta {
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
       ack_time,
       dedup_time,
+    };
+    if persistent {
+      write_metadata(&id, &meta);
+      create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+    }
+    return Queue {
+      id,
+      items,
+      dedup_set: HashSet::new(),
+      ack_map: HashMap::new(),
+      meta,
       persistent,
     };
   }
@@ -159,7 +204,8 @@ impl Queue {
     let item = self.ack_map.get(&id);
     if item.is_some() {
       self.ack_map.remove(&id);
-      self.num_acknowledged += 1;
+      self.meta.num_acknowledged += 1;
+      write_metadata(&self.id, &self.meta);
       true
     } else {
       false
@@ -187,10 +233,11 @@ impl Queue {
       let d_id = dedup_id.unwrap();
       let dedup_in_map = self.dedup_set.contains(&d_id);
       if dedup_in_map {
-        self.num_dedup_hits += 1;
+        self.meta.num_dedup_hits += 1;
+        write_metadata(&self.id, &self.meta);
         return false;
       }
-      let lifetime = self.dedup_time.into();
+      let lifetime = self.meta.dedup_time.into();
       self.dedup_set.insert(d_id.clone());
       if lifetime > 0 {
         self.schedule_dedup_item(d_id, lifetime);
@@ -269,10 +316,11 @@ impl Queue {
           append_to_file(&queue_item_file(&self.id, String::from("")), line);
         }
         if auto_ack {
-          self.num_acknowledged += 1;
+          self.meta.num_acknowledged += 1;
+          write_metadata(&self.id, &self.meta);
         } else {
           let message = item_maybe.clone().unwrap();
-          let lifetime = self.ack_time.into();
+          let lifetime = self.meta.ack_time.into();
           if lifetime > 0 {
             self.schedule_ack_item(message, lifetime);
           }
@@ -290,17 +338,17 @@ impl Queue {
 
   // Returns the amount of successfully acknowledges messages
   pub fn num_acknowledged(&self) -> u64 {
-    self.num_acknowledged
+    self.meta.num_acknowledged
   }
 
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {
-    self.created_at
+    self.meta.created_at
   }
 
   // Returns the amount of dedup hits
   pub fn num_dedup_hits(&self) -> u64 {
-    self.num_dedup_hits
+    self.meta.num_dedup_hits
   }
 
   // Returns the amount of deduplication ids currently being tracked
@@ -314,11 +362,11 @@ impl Queue {
   }
 
   pub fn dedup_time(&self) -> u32 {
-    self.dedup_time
+    self.meta.dedup_time
   }
 
   pub fn ack_time(&self) -> u32 {
-    self.ack_time
+    self.meta.ack_time
   }
 
   pub fn is_persistent(&self) -> bool {
