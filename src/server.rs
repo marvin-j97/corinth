@@ -14,7 +14,6 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::time::Instant;
 
-
 #[derive(Serialize, Deserialize)]
 struct NewItem {
   item: Value,
