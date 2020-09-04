@@ -1,4 +1,5 @@
-use std::{convert::TryInto, env};
+use std::convert::TryInto;
+use std::env;
 
 pub fn try_env_to_uint(name: String) -> Option<u64> {
   let str_value = env::var(name).ok();

@@ -1,6 +1,7 @@
 use crate::date::timestamp;
+use crate::env::data_folder;
 use crate::fs::{append_to_file, file_exists};
-use crate::{env::data_folder, global_data::QUEUES};
+use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};

@@ -1,7 +1,8 @@
 use crate::env::data_folder;
 use std::fs::create_dir_all;
 use std::fs::OpenOptions;
-use std::{io::Write, path::Path};
+use std::io::Write;
+use std::path::Path;
 
 pub fn file_exists(path: &String) -> bool {
   Path::new(&path).exists()
