@@ -145,7 +145,7 @@ pub fn create_server() -> Nickel {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&queue_name).unwrap();
 
-        let mut num_enqueued = 0;
+        let mut enqueued_items: Vec<Message> = Vec::new();
 
         for item in body.messages.iter() {
           let dup_item = item.clone();
@@ -153,12 +153,13 @@ pub fn create_server() -> Nickel {
           let dedup_id_as_string = if dedup_id.is_some() { Some(String::from(dedup_id.clone().unwrap())) } else { None };
           let msg = queue.try_enqueue(dup_item.item.clone(), dedup_id_as_string);
           if msg.is_some() {
-            num_enqueued += 1;
+            enqueued_items.push(msg.unwrap());
           }
         }
         
         success(&mut res, StatusCode::Accepted, json!({
-          "num_enqueued": num_enqueued,
+          "num_enqueued": enqueued_items.len(),
+          "items": enqueued_items
         }), String::from("Request processed successfully"))
       }
       else {
