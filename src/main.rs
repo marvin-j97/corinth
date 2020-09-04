@@ -12,7 +12,7 @@ mod response;
 mod server;
 
 use crate::env::get_port;
-use crate::global_data::create_data_folder;
+use crate::fs::create_data_folder;
 use crate::server::create_server;
 
 fn main() {
