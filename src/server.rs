@@ -207,7 +207,7 @@ pub fn create_server() -> Nickel {
         }
       }
       
-      if all_objects {
+      if all_objects && body.messages.len() < 256 {
         let queue_name = String::from(req.param("queue_name").unwrap());
 
         if !queue_exists(req) {
@@ -255,7 +255,7 @@ pub fn create_server() -> Nickel {
         }), String::from("Request processed successfully"))
       }
       else {
-        error(&mut res, StatusCode::BadRequest, "body.items is required to be of type Array<Object>")
+        error(&mut res, StatusCode::BadRequest, "body.items is required to be of type Array<Object> with at most 255 items")
       }
     },
   );
