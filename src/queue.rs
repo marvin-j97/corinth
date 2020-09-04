@@ -44,6 +44,20 @@ impl Queue {
     };
   }
 
+  // Acknowledge message reception
+  // Returns true if the message was marked as acknowledged
+  // False otherwise
+  pub fn ack(&mut self, id: String) -> bool {
+    let item = self.ack_map.get(&id);
+    if item.is_some() {
+      self.ack_map.remove(&id);
+      self.num_acknowledged += 1;
+      true
+    } else {
+      false
+    }
+  }
+
   // Start timeout thread to remove item from dedup map
   fn schedule_dedup_item(&mut self, id: String, lifetime: u64) {
     let this_id = self.id.clone();
