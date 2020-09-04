@@ -1,7 +1,8 @@
 import ava from "ava";
 import Axios from "axios";
 import { spawnCorinth, NO_FAIL } from "../util";
-import { queueUrl as getQueueUrl } from "../common";
+import { queueUrl as getQueueUrl, Message } from "../common";
+import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 
 spawnCorinth();
 
@@ -27,29 +28,54 @@ ava.serial("Create missing queue on enqueue", async (t) => {
       create_queue: "true",
     },
   });
-  t.is(res.status, 202);
-  t.is(typeof res.data.result, "object");
-  t.is(res.data.result.num_enqueued, 1);
-  t.is(res.data.result.num_deduplicated, 0);
-  t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 3);
+  t.deepEqual(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().enum([202]),
+          data: yxc.object({
+            message: yxc.string().enum(["Request processed successfully"]),
+            result: yxc.object({
+              items: yxc.array(Message()).len(1),
+              num_enqueued: yxc.number().enum([1]),
+              num_deduplicated: yxc.number().enum([0]),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res),
+    []
+  );
 });
 
 ava.serial("1 item should be queued", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.is(res.status, 200);
-  t.is(typeof res.data.result, "object");
-  t.is(typeof res.data.result.queue, "object");
-  t.is(res.data.result.queue.name, queueName);
-  t.is(typeof res.data.result.queue.created_at, "number");
-  t.is(res.data.result.queue.size, 1);
-  t.is(res.data.result.queue.num_deduped, 0);
-  t.is(res.data.result.queue.num_unacked, 0);
-  t.is(res.data.result.queue.num_dedup_hits, 0);
-  t.is(res.data.result.queue.num_acknowledged, 0);
-  t.is(res.data.result.queue.dedup_time, 300);
-  t.is(res.data.result.queue.ack_time, 300);
-  t.is(res.data.result.queue.persistent, false);
-  t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 11);
+  t.deepEqual(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().enum([200]),
+          data: yxc.object({
+            message: yxc.string().enum(["Queue info retrieved successfully"]),
+            result: yxc.object({
+              queue: yxc.object({
+                name: yxc.string().enum([queueName]),
+                created_at: yxc.number().integer(),
+                size: yxc.number().enum([1]),
+                num_deduped: yxc.number().enum([0]),
+                num_unacked: yxc.number().enum([0]),
+                num_dedup_hits: yxc.number().enum([0]),
+                num_acknowledged: yxc.number().enum([0]),
+                dedup_time: yxc.number().enum([300]),
+                ack_time: yxc.number().enum([300]),
+                persistent: yxc.boolean().false(),
+                mem_size: yxc.number(),
+              }),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res),
+    []
+  );
 });
