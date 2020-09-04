@@ -86,6 +86,26 @@ pub fn create_server() -> Nickel {
   );
 
   server.post(
+    "/queue/:queue_name/:message/ack",
+    middleware! { |req, mut res|
+      if queue_exists(req) {
+        let mut queue_map = QUEUES.lock().unwrap();
+        let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
+        let ack_result = queue.ack(req.param("message").unwrap().into());
+        if ack_result {
+          success(&mut res, StatusCode::Ok, json!(null), String::from("Message reception acknowledged")) 
+        }
+        else {
+          error(&mut res, StatusCode::NotFound, "Message not found")
+        }
+      }
+      else {
+        error(&mut res, StatusCode::NotFound, "Queue not found")
+      }
+    },
+  );
+
+  server.post(
     "/queue/:queue_name/enqueue",
     middleware! { |req, mut res|
       let body = try_with!(res, {
