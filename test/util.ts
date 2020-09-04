@@ -7,13 +7,14 @@ export const getUrl = (route: string) => IP + route;
 
 export function spawnCorinth() {
   const exeName = "corinth" + (platform() === "win32" ? ".exe" : "");
-  const path = `../target/debug/${exeName}`;
+  const path = `target/debug/${exeName}`;
   console.error(`Spawning ${path} with port ${PORT}`);
   return execa(path, {
     stdout: process.stdout,
     env: {
       CORINTH_PORT: PORT.toString(),
     },
+    cwd: "..",
   });
 }
 
