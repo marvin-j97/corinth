@@ -201,7 +201,7 @@ pub fn create_server() -> Nickel {
           let mut i = 0;
   
           while i < max {
-            let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
+            let message = queue.dequeue(auto_ack.is_some() && auto_ack.unwrap() == "true");
             if message.is_some() {
               dequeued_items.push(message.unwrap());
               i += 1;
@@ -228,7 +228,7 @@ pub fn create_server() -> Nickel {
       if queue_exists(req) {
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let message = queue.dequeue(true, false);
+        let message = queue.peek();
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()

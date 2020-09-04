@@ -112,15 +112,6 @@ impl Queue {
     None
   }
 
-  // Returns the first element, but does not dequeue it
-  fn peek(&mut self) -> Option<Message> {
-    let item_maybe = self.items.get(0);
-    if item_maybe.is_some() {
-      return Some(item_maybe.unwrap().clone());
-    }
-    return None;
-  }
-
   // Start timeout thread to remove item from ack map & back into queue
   fn schedule_ack_item(&mut self, message: Message, lifetime: u64) {
     let message_id = message.id.clone();
@@ -140,20 +131,27 @@ impl Queue {
     });
   }
 
+  // Returns the first element, but does not dequeue it
+  pub fn peek(&self) -> Option<Message> {
+    let item_maybe = self.items.front();
+    if item_maybe.is_some() {
+      return Some(item_maybe.unwrap().clone());
+    }
+    return None;
+  }
+
   // Removes and returns the first element
-  pub fn dequeue(&mut self, peek: bool, auto_ack: bool) -> Option<Message> {
+  pub fn dequeue(&mut self, auto_ack: bool) -> Option<Message> {
     let item_maybe = self.peek();
     if item_maybe.is_some() {
-      if !peek {
-        self.items.pop_front();
-        if auto_ack {
-          self.num_acknowledged += 1;
-        } else {
-          let message = item_maybe.clone().unwrap();
-          let lifetime = self.ack_time.into();
-          if lifetime > 0 {
-            self.schedule_ack_item(message, lifetime);
-          }
+      self.items.pop_front();
+      if auto_ack {
+        self.num_acknowledged += 1;
+      } else {
+        let message = item_maybe.clone().unwrap();
+        let lifetime = self.ack_time.into();
+        if lifetime > 0 {
+          self.schedule_ack_item(message, lifetime);
         }
       }
       return item_maybe;
