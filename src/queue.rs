@@ -63,7 +63,7 @@ impl Queue {
     let this_id = self.id.clone();
     thread::spawn(move || {
       thread::sleep(Duration::from_secs(lifetime));
-      let mut queue_map = QUEUES.lock().unwrap();
+      let mut queue_map = QUEUES.write().unwrap();
       let this_queue = queue_map.get_mut(&this_id);
       if this_queue.is_some() {
         this_queue.unwrap().dedup_set.remove(&id);
@@ -113,8 +113,8 @@ impl Queue {
   }
 
   // Returns the first element, but does not dequeue it
-  fn peek(&mut self) -> Option<Message> {
-    let item_maybe = self.items.get(0);
+  pub fn peek(&self) -> Option<Message> {
+    let item_maybe = self.items.front();
     if item_maybe.is_some() {
       return Some(item_maybe.unwrap().clone());
     }
@@ -128,7 +128,7 @@ impl Queue {
     let this_id = self.id.clone();
     thread::spawn(move || {
       thread::sleep(Duration::from_secs(lifetime));
-      let mut queue_map = QUEUES.lock().unwrap();
+      let mut queue_map = QUEUES.write().unwrap();
       let this_queue = queue_map.get_mut(&this_id);
       if this_queue.is_some() {
         let queue = this_queue.unwrap();
@@ -141,19 +141,17 @@ impl Queue {
   }
 
   // Removes and returns the first element
-  pub fn dequeue(&mut self, peek: bool, auto_ack: bool) -> Option<Message> {
+  pub fn dequeue(&mut self, auto_ack: bool) -> Option<Message> {
     let item_maybe = self.peek();
     if item_maybe.is_some() {
-      if !peek {
-        self.items.pop_front();
-        if auto_ack {
-          self.num_acknowledged += 1;
-        } else {
-          let message = item_maybe.clone().unwrap();
-          let lifetime = self.ack_time.into();
-          if lifetime > 0 {
-            self.schedule_ack_item(message, lifetime);
-          }
+      self.items.pop_front();
+      if auto_ack {
+        self.num_acknowledged += 1;
+      } else {
+        let message = item_maybe.clone().unwrap();
+        let lifetime = self.ack_time.into();
+        if lifetime > 0 {
+          self.schedule_ack_item(message, lifetime);
         }
       }
       return item_maybe;

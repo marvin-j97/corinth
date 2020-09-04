@@ -64,7 +64,7 @@ pub fn create_server() -> Nickel {
   server.get(
     "/queues",
     middleware! { |_req, mut res|
-      let queue_map = QUEUES.lock().unwrap();
+      let queue_map = QUEUES.read().unwrap();
       let mut queue_names: Vec<String> = queue_map.keys().map(|key| key.clone()).collect();
       queue_names.sort();
       success(&mut res, StatusCode::Ok, json!({
@@ -82,7 +82,7 @@ pub fn create_server() -> Nickel {
     middleware! { |req, mut res|
       if queue_exists(req) {
         let queue_name = String::from(req.param("queue_name").unwrap());
-        let queue_map = QUEUES.lock().unwrap();
+        let queue_map = QUEUES.read().unwrap();
         let queue = queue_map.get(&queue_name).unwrap();
         success(&mut res, StatusCode::Ok, json!({
           "queue": {
@@ -108,7 +108,7 @@ pub fn create_server() -> Nickel {
     "/queue/:queue_name/:message/ack",
     middleware! { |req, mut res|
       if queue_exists(req) {
-        let mut queue_map = QUEUES.lock().unwrap();
+        let mut queue_map = QUEUES.write().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
         let ack_result = queue.ack(req.param("message").unwrap().into());
         if ack_result {
@@ -141,12 +141,12 @@ pub fn create_server() -> Nickel {
       
       if all_objects {
         let queue_name = String::from(req.param("queue_name").unwrap());
+        let mut queue_map = QUEUES.write().unwrap();
 
         if !queue_exists(req) {
           let create_queue = req.query().get("create_queue");
           let create_queue_as_string = if create_queue.is_some() { Some(String::from(create_queue.unwrap())) } else { None };
           if create_queue.is_some() && create_queue_as_string.unwrap() == "true" {
-            let mut queue_map = QUEUES.lock().unwrap();
             queue_map.insert(queue_name.clone(), Queue::new(queue_name.clone(), 300, 300));
           }
           else {
@@ -154,7 +154,6 @@ pub fn create_server() -> Nickel {
           }
         }
 
-        let mut queue_map = QUEUES.lock().unwrap();
         let queue = queue_map.get_mut(&queue_name).unwrap();
 
         let mut enqueued_items: Vec<Message> = Vec::new();
@@ -184,7 +183,7 @@ pub fn create_server() -> Nickel {
     "/queue/:queue_name/dequeue",
     middleware! { |req, mut res|
       if queue_exists(req) {
-        let mut queue_map = QUEUES.lock().unwrap();
+        let mut queue_map = QUEUES.write().unwrap();
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
 
         let query = req.query();
@@ -201,7 +200,7 @@ pub fn create_server() -> Nickel {
           let mut i = 0;
   
           while i < max {
-            let message = queue.dequeue(false, auto_ack.is_some() && auto_ack.unwrap() == "true");
+            let message = queue.dequeue(auto_ack.is_some() && auto_ack.unwrap() == "true");
             if message.is_some() {
               dequeued_items.push(message.unwrap());
               i += 1;
@@ -226,9 +225,9 @@ pub fn create_server() -> Nickel {
     "/queue/:queue_name/peek",
     middleware! { |req, mut res|
       if queue_exists(req) {
-        let mut queue_map = QUEUES.lock().unwrap();
-        let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
-        let message = queue.dequeue(true, false);
+        let queue_map = QUEUES.read().unwrap();
+        let queue = queue_map.get(&String::from(req.param("queue_name").unwrap())).unwrap();
+        let message = queue.peek();
         if message.is_some() {
           success(&mut res, StatusCode::Ok, json!({
             "item": message.unwrap()
@@ -261,7 +260,7 @@ pub fn create_server() -> Nickel {
           return res.error(StatusCode::BadRequest, "Invalid time argument");
         }
 
-        let mut queue_map = QUEUES.lock().unwrap();
+        let mut queue_map = QUEUES.write().unwrap();
         let queue_name = String::from(req.param("queue_name").unwrap());
 
         queue_map.insert(queue_name.clone(), Queue::new(queue_name, ack_time_result.unwrap(), dedup_time_result.unwrap()));
