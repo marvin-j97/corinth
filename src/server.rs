@@ -31,6 +31,7 @@ pub fn create_server() -> Nickel {
     println!("{} {}: {}", req.origin.method.to_string(), req.origin.uri.to_string(), iso_date());
   });
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {get} / Get server info
    * @apiName RootInfo
@@ -55,11 +56,12 @@ pub fn create_server() -> Nickel {
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
         }
-      }), String::from("Info retrieved successfully"))
+      }), String::from("Server info retrieved successfully"))
     },
   );
 
-   /**
+  #[allow(unused_doc_comments)]
+  /**
    * @api {get} /queues List queues
    * @apiName ListQueues
    * @apiGroup Queue
@@ -82,6 +84,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {get} /queues Get queue info
    * @apiName ListQueues
@@ -130,6 +133,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {post} /queue/:queue/:message/ack Acknowledge message reception
    * @apiName AckMessage
@@ -158,6 +162,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {post} /queue/:queue/enqueue Enqueue message(s)
    * @apiName EnqueueMessages
@@ -243,6 +248,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {post} /queue/:queue/dequeue Dequeue message(s)
    * @apiName DequeueMessages
@@ -300,6 +306,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {get} /queue/:queue/peek Peek queue head
    * @apiName PeekQueue
@@ -333,6 +340,7 @@ pub fn create_server() -> Nickel {
     },
   );
 
+  #[allow(unused_doc_comments)]
   /**
    * @api {put} /queue/:queue Create queue
    * @apiName CreateQueue

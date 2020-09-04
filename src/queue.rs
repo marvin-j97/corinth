@@ -22,7 +22,7 @@ pub struct QueueMeta {
   created_at: u64,
   num_acknowledged: u64,
   num_dedup_hits: u64,
-
+  // num_ack_misses: u64
   ack_time: u32,
   dedup_time: u32,
 }
