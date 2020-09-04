@@ -84,7 +84,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Peek queue head -> item0", async (t) => {
@@ -112,7 +112,7 @@ ava.serial("1 item should still be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 const item1 = {
@@ -155,7 +155,7 @@ ava.serial("2 items should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Peek queue head again -> item0", async (t) => {
@@ -183,5 +183,5 @@ ava.serial("2 items should still be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });

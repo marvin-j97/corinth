@@ -10,6 +10,7 @@ use nickel::{HttpRouter, JsonBody, Nickel};
 use serde_json::{json, Value};
 use std::time::Instant;
 
+
 #[derive(Serialize, Deserialize)]
 struct NewItem {
   item: Value,
@@ -84,6 +85,7 @@ pub fn create_server() -> Nickel {
             "dedup_time": queue.dedup_time(),
             "ack_time": queue.ack_time(),
             "persistent": queue.is_persistent(),
+            "mem_size": queue.get_mem_size(), 
           }
         }), String::from("Queue info retrieved successfully"))
       }

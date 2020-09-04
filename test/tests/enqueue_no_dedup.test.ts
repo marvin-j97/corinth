@@ -67,7 +67,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 const NUM_ITEMS = 10;
@@ -90,6 +90,8 @@ ava.serial(`${NUM_ITEMS + 1} items should be queued`, async (t) => {
   t.is(typeof res.data.result.queue, "object");
   t.is(res.data.result.queue.name, queueName);
   t.is(typeof res.data.result.queue.created_at, "number");
+  t.is(typeof res.data.result.queue.mem_size, "number");
+  t.is(res.data.result.queue.mem_size > 0, true);
   t.is(res.data.result.queue.size, NUM_ITEMS + 1);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_unacked, 0);
@@ -99,5 +101,5 @@ ava.serial(`${NUM_ITEMS + 1} items should be queued`, async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });

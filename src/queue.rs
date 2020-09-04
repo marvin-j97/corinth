@@ -6,6 +6,7 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::{create_dir_all, rename, File};
 use std::io::{BufRead, BufReader};
+use std::mem::size_of;
 use std::thread;
 use std::time::Duration;
 
@@ -46,6 +47,13 @@ fn item_write_file(id: &String) -> String {
 }
 
 impl Queue {
+  pub fn get_mem_size(&self) -> usize {
+    size_of::<Queue>()
+      + self.size() * size_of::<Message>()
+      + self.ack_size() * size_of::<Message>()
+      + self.dedup_size() * size_of::<String>()
+  }
+
   // Create a new empty queue
   pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
     let mut items: VecDeque<Message> = VecDeque::new();

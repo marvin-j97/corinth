@@ -23,6 +23,7 @@ export function validateEmptyQueueResponse(
   t.is(typeof res.data.result.queue, "object");
   t.is(res.data.result.queue.name, queueName);
   t.is(typeof res.data.result.queue.created_at, "number");
+  t.is(typeof res.data.result.queue.mem_size, "number");
   t.is(res.data.result.queue.size, 0);
   t.is(res.data.result.queue.num_deduped, 0);
   t.is(res.data.result.queue.num_unacked, 0);
@@ -32,5 +33,5 @@ export function validateEmptyQueueResponse(
   t.is(res.data.result.queue.ack_time, ack_time);
   t.is(res.data.result.queue.persistent, persistent);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 }

@@ -82,7 +82,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
   await sleep(3000);
 });
 
@@ -102,7 +102,7 @@ ava.serial("1 item should be queued, but no dedup anymore", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Enqueue item after dedup expired", async (t) => {
@@ -130,5 +130,5 @@ ava.serial("2 items should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });

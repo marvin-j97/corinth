@@ -67,7 +67,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 const NUM_ITEMS = 10;
@@ -99,5 +99,5 @@ ava.serial("1 item should be queued, still", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });

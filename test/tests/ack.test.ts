@@ -71,7 +71,7 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
@@ -100,7 +100,7 @@ ava.serial("1 item should be unacked", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Ack item", async (t) => {
@@ -132,7 +132,7 @@ ava.serial("1 item should be acked", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
 
 ava.serial("Ack item again -> 404", async (t) => {
@@ -164,5 +164,5 @@ ava.serial("1 item should still be acked", async (t) => {
   t.is(res.data.result.queue.ack_time, 300);
   t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 10);
+  t.is(Object.keys(res.data.result.queue).length, 11);
 });
