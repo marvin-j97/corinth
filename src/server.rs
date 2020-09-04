@@ -363,6 +363,7 @@ pub fn create_server() -> Nickel {
    * @apiParam {String} query:persistent (Optional) Set to "true" to make queue persistent
    * 
    * @apiError 400 Invalid time argument
+   * @apiError 409 Queue already exists
    */
   server.put(
     "/queue/:queue_name",

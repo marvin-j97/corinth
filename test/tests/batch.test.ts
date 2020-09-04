@@ -1,12 +1,7 @@
 import ava from "ava";
 import Axios from "axios";
 import { spawnCorinth, NO_FAIL } from "../util";
-import {
-  queueUrl as getQueueUrl,
-  createQueue,
-  validateEmptyQueueResponse,
-  Message,
-} from "../common";
+import { queueUrl as getQueueUrl, createQueue, Message } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 
 spawnCorinth();
