@@ -34,16 +34,96 @@ pub struct Queue {
   persistent: bool,
 }
 
-fn get_folder(id: &String) -> String {
+// Returns the relative folder path in which
+// the queue is stored (items & metadata)
+fn get_queue_folder(id: &String) -> String {
   format!("{}/{}", data_folder(), id)
 }
 
-fn item_file(id: &String) -> String {
-  format!("{}/items.jsonl", get_folder(&id))
+// Returns the relative path to the persistent storage file
+// of the queue's items
+fn queue_item_file(id: &String, suffix: String) -> String {
+  format!("{}/items{}.jsonl", get_queue_folder(&id), suffix)
 }
 
-fn item_write_file(id: &String) -> String {
-  format!("{}/~items.jsonl", get_folder(&id))
+// Temp file to write into
+fn queue_temp_file(id: &String) -> String {
+  queue_item_file(&id, String::from("~"))
+}
+
+// Reads a file and returns the resulting queue
+// Keeps track of which items were deleted, and is ordered
+// the same way the file is ordered
+fn read_file(file: &String) -> VecDeque<Message> {
+  // Result queue
+  let mut items: VecDeque<Message> = VecDeque::new();
+  // Sequence of message IDs (keep track of order)
+  let mut loaded_files_queue: Vec<String> = Vec::new();
+  // Dictionary of all items
+  let mut item_dictionary: HashMap<String, Message> = HashMap::new();
+
+  // Read file line-by-line
+  // Keep track which files are deleted
+  // and store the order in which the items appeared
+  let file = File::open(&file).expect("Couldn't open items.jsonl");
+  let reader = BufReader::new(file);
+  for line in reader.lines() {
+    let line = line.unwrap();
+    let obj: Value = serde_json::from_str(&line).expect("JSON parse failed");
+    if obj["$corinth_deleted"].is_string() {
+      let id = obj["$corinth_deleted"].as_str().unwrap();
+      item_dictionary.remove(id);
+    } else {
+      let id = obj["id"].as_str().unwrap();
+      let msg: Message = serde_json::from_str(&line).expect("JSON parse failed");
+      item_dictionary.insert(String::from(id), msg);
+      loaded_files_queue.push(String::from(id));
+    }
+  }
+
+  // Only return items that were not deleted
+  for id in loaded_files_queue.iter() {
+    let msg = item_dictionary.get(id);
+    if msg.is_some() {
+      items.push_back(msg.unwrap().clone());
+    }
+  }
+  items
+}
+
+// Write all items into a temp file
+// Then rename tmp_file ~> real_file
+fn compact_file(write_file: &String, compact_to: &String, items: &VecDeque<Message>) {
+  File::create(write_file).expect("Failed to create temporary write file");
+
+  for item in items.iter() {
+    let line = serde_json::to_string(&item)
+      .ok()
+      .expect("JSON stringify error");
+    append_to_file(write_file, format!("{}\n", line));
+  }
+
+  rename(write_file, &compact_to).expect("Failed to compact queue items");
+}
+
+// Initializes the queue's item queue
+// If it is persistent, it will try to read from disk
+// Otherwise it will be initialized as an empty queue
+fn init_items(id: &String, persistent: bool) -> VecDeque<Message> {
+  let mut items: VecDeque<Message> = VecDeque::new();
+
+  if persistent {
+    let queue_item_file = queue_item_file(&id, String::from(""));
+    if file_exists(&get_queue_folder(&id)) && file_exists(&queue_item_file) {
+      items = read_file(&queue_item_file);
+      // Minimize file size
+      compact_file(&queue_temp_file(&id), &queue_item_file, &items);
+    } else {
+      create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+    }
+  }
+
+  items
 }
 
 impl Queue {
@@ -56,53 +136,8 @@ impl Queue {
 
   // Create a new empty queue
   pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
-    let mut items: VecDeque<Message> = VecDeque::new();
-
-    if persistent {
-      let item_file = item_file(&id);
-      if file_exists(&get_folder(&id)) && file_exists(&item_file) {
-        let mut loaded_files_queue: Vec<String> = Vec::new();
-        let mut item_dictionary: HashMap<String, Message> = HashMap::new();
-
-        let file = File::open(&item_file).expect("Couldn't open items.jsonl");
-        let reader = BufReader::new(file);
-
-        for line in reader.lines() {
-          let line = line.unwrap();
-          let obj: Value = serde_json::from_str(&line).expect("JSON parse failed");
-          if obj["$corinth_deleted"].is_string() {
-            let id = obj["$corinth_deleted"].as_str().unwrap();
-            item_dictionary.remove(id);
-          } else {
-            let id = obj["id"].as_str().unwrap();
-            let msg: Message = serde_json::from_str(&line).expect("JSON parse failed");
-            item_dictionary.insert(String::from(id), msg);
-            loaded_files_queue.push(String::from(id));
-          }
-        }
-
-        for id in loaded_files_queue.iter() {
-          let msg = item_dictionary.get(id);
-          if msg.is_some() {
-            items.push_back(msg.unwrap().clone());
-          }
-        }
-
-        let write_file_name = item_write_file(&id);
-        File::create(&write_file_name).expect("Failed to create temporary write file");
-
-        for item in items.iter() {
-          let line = serde_json::to_string(&item)
-            .ok()
-            .expect("JSON stringify error");
-          append_to_file(&write_file_name, format!("{}\n", line));
-        }
-
-        rename(&write_file_name, &item_file).expect("Failed to compact queue items");
-      } else {
-        create_dir_all(get_folder(&id)).expect("Invalid folder name");
-      }
-    }
+    let items: VecDeque<Message> = init_items(&id, persistent);
+    // TODO: compact interval
     return Queue {
       id,
       items,
@@ -175,7 +210,10 @@ impl Queue {
       let line = serde_json::to_string(&message)
         .ok()
         .expect("JSON stringify error");
-      append_to_file(&item_file(&self.id), format!("{}\n", line));
+      append_to_file(
+        &queue_item_file(&self.id, String::from("")),
+        format!("{}\n", line),
+      );
     }
     message
   }
@@ -228,7 +266,7 @@ impl Queue {
         if self.persistent {
           let id = item_maybe.clone().unwrap().id;
           let line = format!("{{\"$corinth_deleted\":\"{}\" }}\n", id);
-          append_to_file(&item_file(&self.id), line);
+          append_to_file(&queue_item_file(&self.id, String::from("")), line);
         }
         if auto_ack {
           self.num_acknowledged += 1;
