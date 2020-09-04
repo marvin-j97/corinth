@@ -16,6 +16,7 @@ pub struct Message {
   queued_at: u64,
   item: Value,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct QueueMeta {
   created_at: u64,
