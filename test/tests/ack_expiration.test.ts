@@ -1,22 +1,10 @@
 import ava from "ava";
 import Axios from "axios";
 import { spawnCorinth, NO_FAIL, sleep } from "../util";
-import {
-  queueUrl as getQueueUrl,
-  createQueue,
-  validateEmptyQueueResponse,
-} from "../common";
+import { queueUrl as getQueueUrl, createQueue, Message } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
-import { ObjectHandler } from "@dotvirus/yxc/dist/handlers/object";
 
 spawnCorinth();
-
-const Message = (item: ObjectHandler = yxc.object().arbitrary()) =>
-  yxc.object({
-    id: yxc.string(),
-    queued_at: yxc.number(),
-    item,
-  });
 
 const queueName = "new_queue";
 const queueUrl = getQueueUrl(queueName);
@@ -56,9 +44,7 @@ ava.serial("Create queue", async (t) => {
         .object({
           status: yxc.number().enum([201]),
           data: yxc.object({
-            message: yxc
-              .string()
-              .check((s) => s === "Queue created successfully"),
+            message: yxc.string().enum(["Queue created successfully"]),
             result: yxc
               .any()
               .nullable()
@@ -73,8 +59,34 @@ ava.serial("Create queue", async (t) => {
 
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.is(res.status, 200);
-  validateEmptyQueueResponse(t, queueName, res, 0, 3);
+  t.deepEqual(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().enum([200]),
+          data: yxc.object({
+            message: yxc.string().enum(["Queue info retrieved successfully"]),
+            result: yxc.object({
+              queue: yxc.object({
+                name: yxc.string().enum([queueName]),
+                created_at: yxc.number().integer(),
+                size: yxc.number().enum([0]),
+                num_deduped: yxc.number().enum([0]),
+                num_unacked: yxc.number().enum([0]),
+                num_dedup_hits: yxc.number().enum([0]),
+                num_acknowledged: yxc.number().enum([0]),
+                dedup_time: yxc.number().enum([300]),
+                ack_time: yxc.number().enum([3]),
+                persistent: yxc.boolean().false(),
+                mem_size: yxc.number(),
+              }),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res),
+    []
+  );
 });
 
 ava.serial("Dequeue queue head -> empty queue", async (t) => {
