@@ -1,4 +1,4 @@
-use std::env;
+use std::{convert::TryInto, env};
 
 pub fn try_env_to_uint(name: String) -> Option<u64> {
   let str_value = env::var(name).ok();
@@ -14,10 +14,12 @@ pub fn try_env_to_uint(name: String) -> Option<u64> {
 }
 
 pub fn get_port() -> u16 {
-  std::env::var("CORINTH_PORT")
-    .unwrap_or(String::from("6767"))
-    .parse::<u16>()
-    .expect("Invalid port value")
+  let num = try_env_to_uint(String::from("CORINTH_PORT"));
+  if num.is_some() {
+    num.unwrap().try_into().expect("Invalid port value")
+  } else {
+    panic!("Invalid port value");
+  }
 }
 
 pub fn data_folder() -> String {
