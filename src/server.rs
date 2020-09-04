@@ -283,7 +283,7 @@ pub fn create_server() -> Nickel {
         let queue = queue_map.get_mut(&String::from(req.param("queue_name").unwrap())).unwrap();
 
         let query = req.query();
-        let auto_ack = query.get("ack");
+        let auto_ack = query.get("ack").unwrap_or("false");
         let num_to_dequeue = query.get("amount").unwrap_or("1").parse::<u8>().map_err(|e| (StatusCode::BadRequest, e));
         let max = num_to_dequeue.unwrap();
 
@@ -296,7 +296,7 @@ pub fn create_server() -> Nickel {
           let mut i = 0;
   
           while i < max {
-            let message = queue.dequeue(auto_ack.is_some() && auto_ack.unwrap() == "true");
+            let message = queue.dequeue(auto_ack == "true");
             if message.is_some() {
               dequeued_items.push(message.unwrap());
               i += 1;
