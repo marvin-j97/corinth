@@ -206,7 +206,9 @@ impl Queue {
     if item.is_some() {
       self.ack_map.remove(&id);
       self.meta.num_acknowledged += 1;
-      write_metadata(&self.id, &self.meta);
+      if self.persistent {
+        write_metadata(&self.id, &self.meta);
+      }
       true
     } else {
       false
@@ -235,7 +237,9 @@ impl Queue {
       let dedup_in_map = self.dedup_set.contains(&d_id);
       if dedup_in_map {
         self.meta.num_dedup_hits += 1;
-        write_metadata(&self.id, &self.meta);
+        if self.persistent {
+          write_metadata(&self.id, &self.meta);
+        }
         return false;
       }
       let lifetime = self.meta.dedup_time.into();
@@ -318,7 +322,9 @@ impl Queue {
         }
         if auto_ack {
           self.meta.num_acknowledged += 1;
-          write_metadata(&self.id, &self.meta);
+          if self.persistent {
+            write_metadata(&self.id, &self.meta);
+          }
         } else {
           let message = item_maybe.clone().unwrap();
           let lifetime = self.meta.ack_time.into();

@@ -52,8 +52,9 @@ ava.serial("Enqueue first item", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 1);
+  t.is(res.data.result.num_deduplicated, 0);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("Enqueue more items", async (t) => {
@@ -61,8 +62,9 @@ ava.serial("Enqueue more items", async (t) => {
     const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
     t.is(res.status, 202);
     t.is(res.data.result.num_enqueued, 0);
+    t.is(res.data.result.num_deduplicated, 1);
     t.is(Array.isArray(res.data.result.items), true);
-    t.is(Object.keys(res.data.result).length, 2);
+    t.is(Object.keys(res.data.result).length, 3);
   }
 });
 
@@ -110,8 +112,9 @@ ava.serial("Enqueue item after dedup expired", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 1);
+  t.is(res.data.result.num_deduplicated, 0);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("2 items should be queued", async (t) => {

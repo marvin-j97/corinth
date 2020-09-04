@@ -60,8 +60,9 @@ ava.serial("Enqueue item", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 5);
+  t.is(res.data.result.num_deduplicated, 0);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("5 items should be queued", async (t) => {
@@ -115,8 +116,9 @@ ava.serial("Enqueue item with dedup", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 3);
+  t.is(res.data.result.num_deduplicated, 2);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("8 items should be queued", async (t) => {
@@ -158,8 +160,9 @@ ava.serial("Enqueue more item with dedup", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 0);
+  t.is(res.data.result.num_deduplicated, 2);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("8 items should still be queued", async (t) => {
@@ -192,7 +195,8 @@ ava.serial("Dequeue queue head", async (t) => {
   t.is(res.status, 200);
   t.is(res.data.message, "Request processed successfully");
   t.is(res.data.result.items.length, 5);
-  t.is(Object.keys(res.data.result).length, 1);
+  t.is(res.data.result.num_items, 5);
+  t.is(Object.keys(res.data.result).length, 2);
 });
 
 ava.serial("3 items should still be queued", async (t) => {
@@ -225,7 +229,8 @@ ava.serial("Dequeue queue head, get remaining items", async (t) => {
   t.is(res.status, 200);
   t.is(res.data.message, "Request processed successfully");
   t.is(res.data.result.items.length, 3);
-  t.is(Object.keys(res.data.result).length, 1);
+  t.is(res.data.result.num_items, 3);
+  t.is(Object.keys(res.data.result).length, 2);
 });
 
 ava.serial("0 items should still be queued", async (t) => {

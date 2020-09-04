@@ -47,8 +47,9 @@ ava.serial("Enqueue item", async (t) => {
   t.is(res.status, 202);
   t.is(typeof res.data.result, "object");
   t.is(res.data.result.num_enqueued, 1);
+  t.is(res.data.result.num_deduplicated, 0);
   t.is(Array.isArray(res.data.result.items), true);
-  t.is(Object.keys(res.data.result).length, 2);
+  t.is(Object.keys(res.data.result).length, 3);
 });
 
 ava.serial("1 item should be queued", async (t) => {
@@ -78,8 +79,9 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
     t.is(res.status, 202);
     t.is(typeof res.data.result, "object");
     t.is(res.data.result.num_enqueued, 0);
+    t.is(res.data.result.num_deduplicated, 1);
     t.is(Array.isArray(res.data.result.items), true);
-    t.is(Object.keys(res.data.result).length, 2);
+    t.is(Object.keys(res.data.result).length, 3);
   }
 });
 
