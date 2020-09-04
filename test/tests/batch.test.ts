@@ -78,8 +78,9 @@ ava.serial("5 items should be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 300);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
 
 ava.serial("Enqueue item with dedup", async (t) => {
@@ -132,8 +133,9 @@ ava.serial("8 items should be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 300);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
 
 ava.serial("Enqueue more item with dedup", async (t) => {
@@ -174,8 +176,9 @@ ava.serial("8 items should still be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 300);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
 
 ava.serial("Dequeue queue head", async (t) => {
@@ -206,8 +209,9 @@ ava.serial("3 items should still be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 5);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 300);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
 
 ava.serial("Dequeue queue head, get remaining items", async (t) => {
@@ -238,6 +242,7 @@ ava.serial("0 items should still be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 8);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 300);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });

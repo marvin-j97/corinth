@@ -13,6 +13,7 @@ ava.serial("GET /", async (t) => {
   t.is(typeof res.data.result.info.version, "string");
   const gracePeriodSecs = 3;
   t.is(res.data.result.info.uptime_secs < gracePeriodSecs, true);
+  t.is(res.data.result.info.uptime_secs >= 0, true);
   t.is(res.data.result.info.uptime_secs * 1000, res.data.result.info.uptime_ms);
   const startedAt = unixToHammer(res.data.result.info.started_at);
   const NOW = Date.now();

@@ -83,6 +83,7 @@ pub fn create_server() -> Nickel {
             "num_dedup_hits": queue.num_dedup_hits(),
             "dedup_time": queue.dedup_time(),
             "ack_time": queue.ack_time(),
+            "persistent": queue.is_persistent(),
           }
         }), String::from("Queue info retrieved successfully"))
       }
@@ -131,11 +132,18 @@ pub fn create_server() -> Nickel {
         let queue_name = String::from(req.param("queue_name").unwrap());
 
         if !queue_exists(req) {
-          let create_queue = req.query().get("create_queue");
-          let create_queue_as_string = if create_queue.is_some() { Some(String::from(create_queue.unwrap())) } else { None };
-          if create_queue.is_some() && create_queue_as_string.unwrap() == "true" {
+          let query = req.query();
+          let create_queue = query.get("create_queue");
+          if create_queue.is_some() && create_queue.unwrap_or("false") == "true" {
+            let persistent = query.get("persistent_queue").unwrap_or("false") == "true";
             let mut queue_map = QUEUES.lock().unwrap();
-            queue_map.insert(queue_name.clone(), Queue::new(queue_name.clone(), 300, 300));
+            let queue = Queue::new(
+              queue_name.clone(),
+              300,
+              300,
+              persistent
+            );
+            queue_map.insert(queue_name.clone(), queue);
           }
           else {
             return res.error(StatusCode::NotFound, "Queue not found");
@@ -239,20 +247,27 @@ pub fn create_server() -> Nickel {
         error(&mut res, StatusCode::Conflict, "Queue already exists")
       }
       else {
+        let queue_name = String::from(req.param("queue_name").unwrap());
         let query = req.query();
         let ack_time_str = query.get("ack_time").unwrap_or("300");
         let dedup_time_str = query.get("dedup_time").unwrap_or("300");
         let ack_time_result = ack_time_str.parse::<u32>().ok();
         let dedup_time_result = dedup_time_str.parse::<u32>().ok();
+        let persistent = query.get("persistent").unwrap_or("false") == "true";
 
         if ack_time_result.is_none() || dedup_time_result.is_none() {
           return res.error(StatusCode::BadRequest, "Invalid time argument");
         }
 
         let mut queue_map = QUEUES.lock().unwrap();
-        let queue_name = String::from(req.param("queue_name").unwrap());
 
-        queue_map.insert(queue_name.clone(), Queue::new(queue_name, ack_time_result.unwrap(), dedup_time_result.unwrap()));
+        let queue = Queue::new(
+          queue_name.clone(), 
+          ack_time_result.unwrap(), 
+          dedup_time_result.unwrap(),
+          persistent
+        );
+        queue_map.insert(queue_name, queue);
         success(&mut res, StatusCode::Created, json!(null), String::from("Queue created successfully"))
       }
     },

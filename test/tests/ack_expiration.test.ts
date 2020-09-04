@@ -91,8 +91,9 @@ ava.serial("1 item should be queued", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 3);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
@@ -120,8 +121,9 @@ ava.serial("1 item should be unacked", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 3);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
   await sleep(3000);
 });
 
@@ -139,6 +141,7 @@ ava.serial("1 item should be queued again", async (t) => {
   t.is(res.data.result.queue.num_acknowledged, 0);
   t.is(res.data.result.queue.dedup_time, 300);
   t.is(res.data.result.queue.ack_time, 3);
+  t.is(res.data.result.queue.persistent, false);
   t.is(Object.keys(res.data.result).length, 1);
-  t.is(Object.keys(res.data.result.queue).length, 9);
+  t.is(Object.keys(res.data.result.queue).length, 10);
 });
