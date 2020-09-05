@@ -15,6 +15,7 @@ ava.serial("GET /", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Server info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               info: yxc.object({
                 name: yxc.string().enum(["Corinth"]),

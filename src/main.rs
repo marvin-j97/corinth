@@ -9,6 +9,7 @@ mod fs;
 mod global_data;
 mod queue;
 mod response;
+mod routes;
 mod server;
 
 use crate::env::get_port;

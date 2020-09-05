@@ -22,6 +22,7 @@ ava.serial("Create queue", async (t) => {
           status: yxc.number().enum([201]),
           data: yxc.object({
             message: yxc.string().enum(["Queue created successfully"]),
+            status: yxc.number().enum([201]),
             result: yxc
               .any()
               .nullable()
@@ -43,6 +44,7 @@ ava.serial("Queue should be empty", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),
@@ -92,6 +94,7 @@ ava.serial("Enqueue item", async (t) => {
           status: yxc.number().enum([202]),
           data: yxc.object({
             message: yxc.string().enum(["Request processed successfully"]),
+            status: yxc.number().enum([202]),
             result: yxc.object({
               items: yxc.array(Message()).len(1),
               num_enqueued: yxc.number().enum([1]),
@@ -115,6 +118,7 @@ ava.serial("1 item should be queued", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),
@@ -147,6 +151,7 @@ ava.serial("Dequeue queue head -> item0", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Request processed successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               items: yxc.array(
                 Message(
@@ -174,6 +179,7 @@ ava.serial("1 item should be unacked", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),
@@ -210,6 +216,7 @@ ava.serial("Ack item", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Message reception acknowledged"]),
+            status: yxc.number().enum([200]),
             result: yxc
               .object()
               .nullable()
@@ -231,6 +238,7 @@ ava.serial("1 item should be acked", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),
@@ -268,6 +276,7 @@ ava.serial("Ack item again -> 404", async (t) => {
           data: yxc.object({
             error: yxc.boolean().true(),
             message: yxc.string().enum(["Message not found"]),
+            status: yxc.number().enum([404]),
           }),
         })
         .arbitrary()
@@ -285,6 +294,7 @@ ava.serial("1 item should still be acked", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),

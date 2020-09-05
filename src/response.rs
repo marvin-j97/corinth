@@ -1,39 +1,20 @@
 use nickel::status::StatusCode;
-use nickel::Response;
-use serde_json::Value;
+use serde_json::{json, Value};
 
-#[derive(Serialize, Deserialize)]
-struct SuccessResponse {
-  result: Value,
-  message: String,
+pub fn format_success(status: StatusCode, message: String, result: Value) -> String {
+  let res_body = json!({
+    "status": status.to_u16(),
+    "message": message,
+    "result": result,
+  });
+  serde_json::to_string(&res_body).expect("JSON stringify failed")
 }
 
-#[derive(Serialize, Deserialize)]
-struct ErrorResponse {
-  error: bool,
-  message: String,
-}
-
-pub fn success(
-  res: &mut Response,
-  status: StatusCode,
-  result: Value,
-  message: String,
-) -> Result<Value, (nickel::status::StatusCode, serde_json::error::Error)> {
-  res.set(status);
-  let res_body = SuccessResponse { result, message };
-  serde_json::to_value(res_body).map_err(|e| (StatusCode::InternalServerError, e))
-}
-
-pub fn error(
-  res: &mut Response,
-  status: StatusCode,
-  message: &str,
-) -> Result<Value, (nickel::status::StatusCode, serde_json::error::Error)> {
-  let res_body = ErrorResponse {
-    error: true,
-    message: String::from(message),
-  };
-  res.set(status);
-  serde_json::to_value(res_body).map_err(|e| (StatusCode::InternalServerError, e))
+pub fn format_error(status: StatusCode, message: String) -> String {
+  let res_body = json!({
+    "status": status.to_u16(),
+    "error": true,
+    "message": message,
+  });
+  serde_json::to_string(&res_body).expect("JSON stringify failed")
 }

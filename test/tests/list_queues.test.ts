@@ -19,6 +19,7 @@ ava.serial("List queues", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue list retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queues: yxc.object({
                 items: yxc.array(yxc.string()).len(names.length),

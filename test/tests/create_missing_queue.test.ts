@@ -35,6 +35,7 @@ ava.serial("Create missing queue on enqueue", async (t) => {
           status: yxc.number().enum([202]),
           data: yxc.object({
             message: yxc.string().enum(["Request processed successfully"]),
+            status: yxc.number().enum([202]),
             result: yxc.object({
               items: yxc.array(Message()).len(1),
               num_enqueued: yxc.number().enum([1]),
@@ -57,6 +58,7 @@ ava.serial("1 item should be queued", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),

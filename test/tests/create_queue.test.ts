@@ -17,6 +17,7 @@ ava.serial("Queue shouldn't exist", async (t) => {
         .object({
           status: yxc.number().enum([404]),
           data: yxc.object({
+            status: yxc.number().enum([404]),
             error: yxc.boolean().true(),
             message: yxc.string().enum(["Queue not found"]),
           }),
@@ -36,6 +37,7 @@ ava.serial("Create queue", async (t) => {
           status: yxc.number().enum([201]),
           data: yxc.object({
             message: yxc.string().enum(["Queue created successfully"]),
+            status: yxc.number().enum([201]),
             result: yxc
               .any()
               .nullable()
@@ -57,6 +59,7 @@ ava.serial("Queue should be empty", async (t) => {
           status: yxc.number().enum([200]),
           data: yxc.object({
             message: yxc.string().enum(["Queue info retrieved successfully"]),
+            status: yxc.number().enum([200]),
             result: yxc.object({
               queue: yxc.object({
                 name: yxc.string().enum([queueName]),
