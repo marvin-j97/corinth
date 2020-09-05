@@ -297,10 +297,17 @@ impl Queue {
         let queue = this_queue.unwrap();
         let message = queue.ack_map.remove(&message_id);
         if message.is_some() {
-          queue.items.push_back(message.unwrap());
+          queue.items.push_back(message.clone().unwrap());
           queue.meta.num_ack_misses += 1;
           if queue.persistent {
             write_metadata(&queue.id, &queue.meta);
+            let line = serde_json::to_string(&message)
+              .ok()
+              .expect("JSON stringify error");
+            append_to_file(
+              &queue_item_file(&queue.id, String::from("")),
+              format!("{}\n", line),
+            );
           }
         }
       }
