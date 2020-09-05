@@ -69,6 +69,7 @@ ava.serial("Queue should be empty", async (t) => {
                 num_unacked: yxc.number().enum([0]),
                 num_dedup_hits: yxc.number().enum([0]),
                 num_acknowledged: yxc.number().enum([0]),
+                num_ack_misses: yxc.number().enum([0]),
                 dedup_time: yxc.number().enum([300]),
                 ack_time: yxc.number().enum([300]),
                 persistent: yxc.boolean().false(),

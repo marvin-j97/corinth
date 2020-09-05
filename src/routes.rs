@@ -266,6 +266,7 @@ pub fn queue_info<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareR
           "ack_time": queue.ack_time(),
           "persistent": queue.is_persistent(),
           "mem_size": queue.get_mem_size(),
+          "num_ack_misses": queue.num_ack_misses(),
         }
       }),
     ));

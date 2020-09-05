@@ -23,7 +23,7 @@ pub struct QueueMeta {
   created_at: u64,
   num_acknowledged: u64,
   num_dedup_hits: u64,
-  // num_ack_misses: u64
+  num_ack_misses: u64,
   ack_time: u32,
   dedup_time: u32,
 }
@@ -156,6 +156,7 @@ impl Queue {
       dedup_set: HashSet::new(),
       ack_map: HashMap::new(),
       meta: QueueMeta {
+        num_ack_misses: 0,
         num_dedup_hits: 0,
         num_acknowledged: 0,
         created_at: timestamp(),
@@ -179,6 +180,7 @@ impl Queue {
     let items: VecDeque<Message> = VecDeque::new();
     // TODO: compact interval
     let meta = QueueMeta {
+      num_ack_misses: 0,
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
@@ -296,6 +298,10 @@ impl Queue {
         let message = queue.ack_map.remove(&message_id);
         if message.is_some() {
           queue.items.push_back(message.unwrap());
+          queue.meta.num_ack_misses += 1;
+          if queue.persistent {
+            write_metadata(&queue.id, &queue.meta);
+          }
         }
       }
     });
@@ -377,5 +383,9 @@ impl Queue {
 
   pub fn is_persistent(&self) -> bool {
     self.persistent
+  }
+
+  pub fn num_ack_misses(&self) -> u64 {
+    self.meta.num_ack_misses
   }
 }
