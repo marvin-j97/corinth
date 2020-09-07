@@ -5,8 +5,15 @@ export const PORT = +(process.env.CORINTH_PORT || 6767);
 export const IP = `http://localhost:${PORT}`;
 export const getUrl = (route: string) => IP + route;
 
+// Return cross-platform file name of executable
+// myfile for Linux & Mac
+// myfile.exe for Windows
+function executableName(filename: string) {
+  return filename + (platform() === "win32" ? ".exe" : "");
+}
+
 export function spawnCorinth() {
-  const exeName = "corinth" + (platform() === "win32" ? ".exe" : "");
+  const exeName = executableName("corinth");
   const path = `target/debug/${exeName}`;
   console.error(`Spawning ${path} with port ${PORT}`);
   return execa(path, {
