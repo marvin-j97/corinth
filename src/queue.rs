@@ -65,8 +65,6 @@ fn queue_temp_file(id: &String) -> String {
 // Keeps track of which items were deleted, and is ordered
 // the same way the file is ordered
 fn read_file(file: &String) -> VecDeque<Message> {
-  // Result queue
-  let mut items: VecDeque<Message> = VecDeque::new();
   // Sequence of message IDs (keep track of order)
   let mut loaded_files_queue: Vec<String> = Vec::new();
   // Dictionary of all items
@@ -90,6 +88,9 @@ fn read_file(file: &String) -> VecDeque<Message> {
       loaded_files_queue.push(String::from(id));
     }
   }
+
+  // Result queue
+  let mut items: VecDeque<Message> = VecDeque::new();
 
   // Only return items that were not deleted
   for id in loaded_files_queue.iter() {
