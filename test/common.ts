@@ -15,5 +15,11 @@ export function queueUrl(name: string) {
 }
 
 export function createQueue(name: string, opts?: AxiosRequestConfig) {
-  return Axios.put(queueUrl(name), null, opts);
+  return Axios.put(queueUrl(name), null, {
+    ...opts,
+    params: {
+      persistent: false,
+      ...(opts?.params || {}),
+    },
+  });
 }

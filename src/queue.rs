@@ -46,7 +46,7 @@ fn get_queue_folder(id: &String) -> String {
   format!("{}/{}", data_folder(), id)
 }
 
-fn queue_meta_file(id: &String) -> String {
+pub fn queue_meta_file(id: &String) -> String {
   format!("{}/meta.json", get_queue_folder(&id))
 }
 
@@ -122,10 +122,12 @@ fn init_items(id: &String) -> VecDeque<Message> {
   let mut items: VecDeque<Message> = VecDeque::new();
 
   let queue_item_file = queue_item_file(&id, String::from(""));
-  if file_exists(&get_queue_folder(&id)) && file_exists(&queue_item_file) {
-    items = read_file(&queue_item_file);
-    // Minimize file size
-    compact_file(&queue_temp_file(&id), &queue_item_file, &items);
+  if file_exists(&get_queue_folder(&id)) {
+    if file_exists(&queue_item_file) {
+      items = read_file(&queue_item_file);
+      // Minimize file size
+      compact_file(&queue_temp_file(&id), &queue_item_file, &items);
+    }
   } else {
     create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
   }
@@ -189,8 +191,8 @@ impl Queue {
       dedup_time,
     };
     if persistent {
-      write_metadata(&id, &meta);
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+      write_metadata(&id, &meta);
     }
     return Queue {
       id,

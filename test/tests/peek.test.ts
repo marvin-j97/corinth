@@ -50,6 +50,7 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
+  process.exit();
 });
 
 ava.serial("Queue should be empty", async (t) => {

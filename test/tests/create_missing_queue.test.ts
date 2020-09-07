@@ -25,7 +25,8 @@ ava.serial("Create missing queue on enqueue", async (t) => {
   const res = await Axios.post(queueUrl + "/enqueue", reqBody, {
     ...axiosConfig,
     params: {
-      create_queue: "true",
+      create_queue: true,
+      persistent_queue: false,
     },
   });
   t.deepEqual(

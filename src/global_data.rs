@@ -1,5 +1,6 @@
 use crate::fs::create_data_folder;
-use crate::queue::Queue;
+use crate::fs::file_exists;
+use crate::queue::{queue_meta_file, Queue};
 use lazy_static::lazy_static;
 use nickel::Request;
 use std::collections::HashMap;
@@ -27,12 +28,17 @@ pub fn read_queues_from_disk() {
   let mut queue_map = QUEUES.lock().unwrap();
   for entry in entries {
     let file = entry.unwrap();
+    let queue_name = file.file_name().into_string().unwrap();
     if metadata(file.path()).unwrap().is_dir() {
-      let queue_name = file.file_name();
-      let queue_name = queue_name.into_string().unwrap();
-      let queue = Queue::from_disk(queue_name.clone());
-      println!("Read queue '{}' from disk", queue_name);
-      queue_map.insert(queue_name, queue);
+      if file_exists(&queue_meta_file(&queue_name)) {
+        let queue = Queue::from_disk(queue_name.clone());
+        println!("Read queue '{}' from disk", queue_name);
+        queue_map.insert(queue_name, queue);
+      } else {
+        println!("Metadata file not found, skipping...")
+      }
+    } else {
+      println!("File in CORINTH_BASE_FOLDER not a folder, skipping...")
     }
   }
 }
