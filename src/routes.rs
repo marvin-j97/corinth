@@ -152,7 +152,7 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
       let query = req.query();
       let create_queue = query.get("create_queue");
       if create_queue.is_some() && create_queue.unwrap_or("false") == "true" {
-        let persistent = query.get("persistent_queue").unwrap_or("false") == "true";
+        let persistent = query.get("persistent_queue").unwrap_or("true") == "true";
         let mut queue_map = QUEUES.lock().unwrap();
         let queue = Queue::new(queue_name.clone(), 300, 300, persistent);
         queue_map.insert(queue_name.clone(), queue);
@@ -317,7 +317,7 @@ pub fn create_queue_handler<'mw>(
     let dedup_time_str = query.get("dedup_time").unwrap_or("300");
     let ack_time_result = ack_time_str.parse::<u32>().ok();
     let dedup_time_result = dedup_time_str.parse::<u32>().ok();
-    let persistent = query.get("persistent").unwrap_or("false") == "true";
+    let persistent = query.get("persistent").unwrap_or("true") == "true";
 
     if ack_time_result.is_none() || dedup_time_result.is_none() {
       res.set(MediaType::Json);
