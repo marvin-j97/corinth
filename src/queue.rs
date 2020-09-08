@@ -70,6 +70,8 @@ fn read_file(file: &String) -> VecDeque<Message> {
   // Dictionary of all items
   let mut item_dictionary: HashMap<String, Message> = HashMap::new();
 
+  let deleted_flag = "$corinth_deleted";
+
   // Read file line-by-line
   // Keep track which files are deleted
   // and store the order in which the items appeared
@@ -78,8 +80,8 @@ fn read_file(file: &String) -> VecDeque<Message> {
   for line in reader.lines() {
     let line = line.unwrap();
     let obj: Value = serde_json::from_str(&line).expect("JSON parse failed");
-    if obj["$corinth_deleted"].is_string() {
-      let id = obj["$corinth_deleted"].as_str().unwrap();
+    if obj[deleted_flag].is_string() {
+      let id = obj[deleted_flag].as_str().unwrap();
       item_dictionary.remove(id);
     } else {
       let id = obj["id"].as_str().unwrap();
@@ -89,16 +91,25 @@ fn read_file(file: &String) -> VecDeque<Message> {
     }
   }
 
+  let mut stack: VecDeque<Message> = VecDeque::new();
+
+  // Only return items that were not deleted
+  for id in loaded_files_queue.iter().rev() {
+    let msg = item_dictionary.get(id);
+    if msg.is_some() {
+      stack.push_back(msg.unwrap().clone());
+      item_dictionary.remove(id);
+    }
+  }
+
   // Result queue
   let mut items: VecDeque<Message> = VecDeque::new();
 
-  // Only return items that were not deleted
-  for id in loaded_files_queue.iter() {
-    let msg = item_dictionary.get(id);
-    if msg.is_some() {
-      items.push_back(msg.unwrap().clone());
-    }
+  while !stack.is_empty() {
+    let message = stack.pop_back().unwrap();
+    items.push_back(message);
   }
+
   items
 }
 
@@ -122,14 +133,10 @@ fn init_items(id: &String) -> VecDeque<Message> {
   let mut items: VecDeque<Message> = VecDeque::new();
 
   let queue_item_file = queue_item_file(&id, String::from(""));
-  if file_exists(&get_queue_folder(&id)) {
-    if file_exists(&queue_item_file) {
-      items = read_file(&queue_item_file);
-      // Minimize file size
-      compact_file(&queue_temp_file(&id), &queue_item_file, &items);
-    }
-  } else {
-    create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+  if file_exists(&queue_item_file) {
+    items = read_file(&queue_item_file);
+    // Minimize file size
+    compact_file(&queue_temp_file(&id), &queue_item_file, &items);
   }
 
   items
@@ -169,12 +176,9 @@ impl Queue {
       persistent: true,
     };
     let metadata_file = queue_meta_file(&id);
-    if file_exists(&metadata_file) {
-      let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
-      let metadata: QueueMeta =
-        serde_json::from_str(&metadata).expect("Couldn't read metadata file");
-      queue.meta = metadata;
-    }
+    let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
+    let metadata: QueueMeta = serde_json::from_str(&metadata).expect("Couldn't read metadata file");
+    queue.meta = metadata;
     queue
   }
 

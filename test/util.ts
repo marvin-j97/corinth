@@ -14,14 +14,13 @@ function executableName(filename: string) {
 
 export function spawnCorinth() {
   const exeName = executableName("corinth");
-  const path = `target/debug/${exeName}`;
+  const path = `../target/debug/${exeName}`;
   console.error(`Spawning ${path} with port ${PORT}`);
   return execa(path, {
     stdout: process.stdout,
     env: {
       CORINTH_PORT: PORT.toString(),
     },
-    cwd: "..",
   });
 }
 
