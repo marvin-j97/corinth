@@ -1,9 +1,23 @@
 import execa from "execa";
 import { platform } from "os";
+import { rmdirSync, existsSync } from "fs";
 
 export const PORT = +(process.env.CORINTH_PORT || 6767);
 export const IP = `http://localhost:${PORT}`;
 export const getUrl = (route: string) => IP + route;
+
+export function persistenceTeardown() {
+  console.log("Test teardown");
+
+  try {
+    rmdirSync(".corinth", { recursive: true });
+  } catch (error) {}
+
+  if (existsSync(".corinth")) {
+    console.error("ERROR: Test teardown failed");
+    process.exit(1);
+  }
+}
 
 export function countSync<T>(
   arr: T[],

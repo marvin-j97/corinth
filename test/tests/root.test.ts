@@ -1,7 +1,16 @@
-import ava from "ava";
+import ava, { before, after } from "ava";
 import Axios from "axios";
-import { getUrl, spawnCorinth, unixToHammer, NO_FAIL } from "../util";
+import {
+  getUrl,
+  spawnCorinth,
+  unixToHammer,
+  NO_FAIL,
+  persistenceTeardown,
+} from "../util";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+
+before(persistenceTeardown);
+after(persistenceTeardown);
 
 spawnCorinth();
 

@@ -1,29 +1,12 @@
 import ava, { before, after } from "ava";
 import Axios from "axios";
-import { spawnCorinth, NO_FAIL, sleep } from "../../util";
+import { spawnCorinth, NO_FAIL, sleep, persistenceTeardown } from "../../util";
 import { queueUrl as getQueueUrl, createQueue, Message } from "../../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
-import { existsSync, rmdirSync } from "fs";
+import { existsSync } from "fs";
 
-before(() => {
-  try {
-    rmdirSync(".corinth", { recursive: true });
-  } catch (error) {}
-
-  if (existsSync(".corinth")) {
-    console.error("ERROR: Test teardown failed");
-    process.exit(1);
-  }
-});
-
-after(() => {
-  console.log("Teardown " + __filename);
-  try {
-    rmdirSync(".corinth", { recursive: true });
-  } catch (error) {
-    console.warn("WARN: Test teardown failed");
-  }
-});
+before(persistenceTeardown);
+after(persistenceTeardown);
 
 let corinth = spawnCorinth();
 

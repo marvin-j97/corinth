@@ -1,35 +1,19 @@
-import ava from "ava";
+import ava, { before, after } from "ava";
 import Axios from "axios";
-import { spawnCorinth, NO_FAIL } from "../util";
+import { spawnCorinth, NO_FAIL, persistenceTeardown } from "../util";
 import { queueUrl as getQueueUrl, createQueue } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 import { existsSync } from "fs";
+
+before(persistenceTeardown);
+after(persistenceTeardown);
 
 spawnCorinth();
 
 const queueName = "new_queue";
 const queueUrl = getQueueUrl(queueName);
 
-ava.serial("Queue shouldn't exist", async (t) => {
-  const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
-    createExecutableSchema(
-      yxc
-        .object({
-          status: yxc.number().enum([404]),
-          data: yxc.object({
-            status: yxc.number().enum([404]),
-            error: yxc.boolean().true(),
-            message: yxc.string().enum(["Queue not found"]),
-          }),
-        })
-        .arbitrary()
-    )(res),
-    []
-  );
-});
-
-ava.serial("Create queue", async (t) => {
+ava.serial("Create volatile queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
   t.deepEqual(
     createExecutableSchema(
@@ -49,8 +33,6 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
-  t.is(existsSync(".corinth/new_queue/meta.json"), false);
-  t.is(existsSync(".corinth/new_queue/items.jsonl"), false);
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -85,4 +67,6 @@ ava.serial("Queue should be empty", async (t) => {
     )(res),
     []
   );
+  t.is(existsSync(`.corinth/${queueName}/meta.json`), false);
+  t.is(existsSync(`.corinth/${queueName}/items.jsonl`), false);
 });
