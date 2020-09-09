@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "doc": "apidoc -i src -o api-doc -v -f \".*\\.rs$\"",
+    "doc": "apidoc -i src -o docs/api -v -f \".*\\.rs$\"",
     "test": "cd test && npm test"
   },
   "devDependencies": {
