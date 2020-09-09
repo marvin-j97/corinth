@@ -258,15 +258,15 @@ pub fn queue_info<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareR
           "name": queue_name,
           "created_at": queue.created_at(),
           "size": queue.size(),
-          "num_deduped": queue.dedup_size(),
-          "num_unacked": queue.ack_size(),
+          "num_deduplicating": queue.dedup_size(),
+          "num_unacknowledged": queue.ack_size(),
           "num_acknowledged": queue.num_acknowledged(),
-          "num_dedup_hits": queue.num_dedup_hits(),
-          "dedup_time": queue.dedup_time(),
-          "ack_time": queue.ack_time(),
+          "num_deduplicated": queue.num_deduplicated(),
+          "deduplication_time": queue.deduplication_time(),
+          "requeue_time": queue.requeue_time(),
           "persistent": queue.is_persistent(),
-          "mem_size": queue.get_mem_size(),
-          "num_ack_misses": queue.num_ack_misses(),
+          "memory_size": queue.get_memory_size(),
+          "num_requeued": queue.num_requeued(),
         }
       }),
     ));
@@ -313,13 +313,13 @@ pub fn create_queue_handler<'mw>(
   } else {
     let queue_name = String::from(req.param("queue_name").unwrap());
     let query = req.query();
-    let ack_time_str = query.get("ack_time").unwrap_or("300");
-    let dedup_time_str = query.get("dedup_time").unwrap_or("300");
-    let ack_time_result = ack_time_str.parse::<u32>().ok();
-    let dedup_time_result = dedup_time_str.parse::<u32>().ok();
+    let requeue_time_str = query.get("requeue_time").unwrap_or("300");
+    let deduplication_time_str = query.get("deduplication_time").unwrap_or("300");
+    let requeue_time_result = requeue_time_str.parse::<u32>().ok();
+    let deduplication_time_result = deduplication_time_str.parse::<u32>().ok();
     let persistent = query.get("persistent").unwrap_or("true") == "true";
 
-    if ack_time_result.is_none() || dedup_time_result.is_none() {
+    if requeue_time_result.is_none() || deduplication_time_result.is_none() {
       res.set(MediaType::Json);
       res.set(StatusCode::BadRequest);
       return res.send(format_error(
@@ -331,8 +331,8 @@ pub fn create_queue_handler<'mw>(
     let mut queue_map = QUEUES.lock().unwrap();
     let queue = Queue::new(
       queue_name.clone(),
-      ack_time_result.unwrap(),
-      dedup_time_result.unwrap(),
+      requeue_time_result.unwrap(),
+      deduplication_time_result.unwrap(),
       persistent,
     );
     queue_map.insert(queue_name, queue);

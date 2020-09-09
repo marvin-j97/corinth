@@ -22,10 +22,10 @@ pub struct Message {
 pub struct QueueMeta {
   created_at: u64,
   num_acknowledged: u64,
-  num_dedup_hits: u64,
-  num_ack_misses: u64,
-  ack_time: u32,
-  dedup_time: u32,
+  num_deduplicated: u64,
+  num_requeued: u64,
+  requeue_time: u32,
+  deduplication_time: u32,
 }
 
 pub struct Queue {
@@ -150,7 +150,7 @@ fn write_metadata(id: &String, meta: &QueueMeta) {
 }
 
 impl Queue {
-  pub fn get_mem_size(&self) -> usize {
+  pub fn get_memory_size(&self) -> usize {
     size_of::<Queue>()
       + self.size() * size_of::<Message>()
       + self.ack_size() * size_of::<Message>()
@@ -166,12 +166,12 @@ impl Queue {
       dedup_set: HashSet::new(),
       ack_map: HashMap::new(),
       meta: QueueMeta {
-        num_ack_misses: 0,
-        num_dedup_hits: 0,
+        num_requeued: 0,
+        num_deduplicated: 0,
         num_acknowledged: 0,
         created_at: timestamp(),
-        ack_time: 300,
-        dedup_time: 300,
+        requeue_time: 300,
+        deduplication_time: 300,
       },
       persistent: true,
     };
@@ -183,16 +183,16 @@ impl Queue {
   }
 
   // Create a new empty queue
-  pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
+  pub fn new(id: String, requeue_time: u32, deduplication_time: u32, persistent: bool) -> Queue {
     let items: VecDeque<Message> = VecDeque::new();
     // TODO: compact interval
     let meta = QueueMeta {
-      num_ack_misses: 0,
-      num_dedup_hits: 0,
+      num_requeued: 0,
+      num_deduplicated: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
-      ack_time,
-      dedup_time,
+      requeue_time,
+      deduplication_time,
     };
     if persistent {
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
@@ -246,13 +246,13 @@ impl Queue {
       let d_id = dedup_id.unwrap();
       let dedup_in_map = self.dedup_set.contains(&d_id);
       if dedup_in_map {
-        self.meta.num_dedup_hits += 1;
+        self.meta.num_deduplicated += 1;
         if self.persistent {
           write_metadata(&self.id, &self.meta);
         }
         return false;
       }
-      let lifetime = self.meta.dedup_time.into();
+      let lifetime = self.meta.deduplication_time.into();
       self.dedup_set.insert(d_id.clone());
       if lifetime > 0 {
         self.schedule_dedup_item(d_id, lifetime);
@@ -305,7 +305,7 @@ impl Queue {
         let message = queue.ack_map.remove(&message_id);
         if message.is_some() {
           queue.items.push_back(message.clone().unwrap());
-          queue.meta.num_ack_misses += 1;
+          queue.meta.num_requeued += 1;
           if queue.persistent {
             write_metadata(&queue.id, &queue.meta);
             let line = serde_json::to_string(&message)
@@ -347,7 +347,7 @@ impl Queue {
         }
       } else {
         let message = item_maybe.clone().unwrap();
-        let lifetime = self.meta.ack_time.into();
+        let lifetime = self.meta.requeue_time.into();
         if lifetime > 0 {
           self.schedule_ack_item(message, lifetime);
         }
@@ -373,8 +373,8 @@ impl Queue {
   }
 
   // Returns the amount of dedup hits
-  pub fn num_dedup_hits(&self) -> u64 {
-    self.meta.num_dedup_hits
+  pub fn num_deduplicated(&self) -> u64 {
+    self.meta.num_deduplicated
   }
 
   // Returns the amount of deduplication ids currently being tracked
@@ -387,19 +387,19 @@ impl Queue {
     self.ack_map.len()
   }
 
-  pub fn dedup_time(&self) -> u32 {
-    self.meta.dedup_time
+  pub fn deduplication_time(&self) -> u32 {
+    self.meta.deduplication_time
   }
 
-  pub fn ack_time(&self) -> u32 {
-    self.meta.ack_time
+  pub fn requeue_time(&self) -> u32 {
+    self.meta.requeue_time
   }
 
   pub fn is_persistent(&self) -> bool {
     self.persistent
   }
 
-  pub fn num_ack_misses(&self) -> u64 {
-    self.meta.num_ack_misses
+  pub fn num_requeued(&self) -> u64 {
+    self.meta.num_requeued
   }
 }

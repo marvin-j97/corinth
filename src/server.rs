@@ -69,14 +69,14 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {String} result:queue:name Queue name
    * @apiSuccess {Number} result:queue:created_at Queue creation unix timestamp
    * @apiSuccess {Number} result:queue:size Queue size (length)
-   * @apiSuccess {Number} result:queue:num_deduped Amount of tracked deduplication IDs
-   * @apiSuccess {Number} result:queue:num_unacked Amount of unacknowledged messages
+   * @apiSuccess {Number} result:queue:num_deduplicating Amount of tracked deduplication IDs
+   * @apiSuccess {Number} result:queue:num_unacknowledged Amount of unacknowledged messages
    * @apiSuccess {Number} result:queue:num_acknowledged Amount of acknowledged (done) messages
-   * @apiSuccess {Number} result:queue:num_dedup_hits Amount of deduplicated items
-   * @apiSuccess {Number} result:queue:dedup_time Time for deduplication ID to expire
-   * @apiSuccess {Number} result:queue:ack_time Time for an unacknowledged message to get added back into the queue
+   * @apiSuccess {Number} result:queue:num_deduplicated Amount of deduplicated items
+   * @apiSuccess {Number} result:queue:deduplication_time Time for deduplication ID to expire
+   * @apiSuccess {Number} result:queue:requeue_time Time for an unacknowledged message to get added back into the queue
    * @apiSuccess {String} result:queue:persistent Whether the queue is saved on disk
-   * @apiSuccess {Number} result:queue:mem_size Approximate memory usage of the queue
+   * @apiSuccess {Number} result:queue:memory_size Approximate memory usage of the queue
    *
    * @apiError 404 Queue not found
    */
@@ -148,8 +148,8 @@ pub fn create_server() -> Nickel {
    * @apiName CreateQueue
    * @apiGroup Queue
    *
-   * @apiParam {String} query:ack_time (Optional) Ack time in seconds
-   * @apiParam {String} query:dedup_time (Optional) Deduplication time in seconds
+   * @apiParam {String} query:requeue_time (Optional) Ack time in seconds
+   * @apiParam {String} query:deduplication_time (Optional) Deduplication time in seconds
    * @apiParam {String} query:persistent (Optional) Set to "true" to make queue persistent
    *
    * @apiError 400 Invalid time argument
