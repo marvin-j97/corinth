@@ -5,7 +5,7 @@ use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs::{create_dir_all, read_to_string, rename, File};
+use std::fs::{create_dir_all, read_to_string, remove_dir_all, remove_file, rename, File};
 use std::io::{BufRead, BufReader, Write};
 use std::mem::size_of;
 use std::thread;
@@ -49,7 +49,7 @@ pub struct Queue {
 
 // Returns the relative folder path in which
 // the queue is stored (items & metadata)
-fn get_queue_folder(id: &String) -> String {
+pub fn get_queue_folder(id: &String) -> String {
   format!("{}/{}", data_folder(), id)
 }
 
@@ -411,5 +411,25 @@ impl Queue {
 
   pub fn num_requeued(&self) -> u64 {
     self.meta.num_requeued
+  }
+
+  pub fn purge(&mut self, delete: bool) {
+    self.items = VecDeque::new();
+    self.ack_map = HashMap::new();
+    self.dedup_set = HashSet::new();
+    self.meta.num_acknowledged = 0;
+    self.meta.num_deduplicated = 0;
+    self.meta.num_requeued = 0;
+
+    if self.persistent {
+      if delete {
+        let folder = get_queue_folder(&self.id);
+        remove_dir_all(folder).expect("Failed to delete queue folder");
+      } else {
+        let item_file = queue_item_file(&self.id, String::from(""));
+        remove_file(item_file).expect("Failed to delete item file");
+        write_metadata(&self.id, &self.meta);
+      }
+    }
   }
 }

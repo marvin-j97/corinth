@@ -2,8 +2,8 @@ use crate::date::elapsed_secs;
 use crate::date::timestamp;
 use crate::response::format_success;
 use crate::routes::{
-  ack_message, create_queue_handler, dequeue_handler, enqueue_handler, favicon_handler,
-  list_queues, logger, peek_handler, queue_info,
+  ack_message, create_queue_handler, delete_queue_handler, dequeue_handler, enqueue_handler,
+  favicon_handler, list_queues, logger, peek_handler, purge_queue_handler, queue_info,
 };
 use nickel::status::StatusCode;
 use nickel::{HttpRouter, MediaType, Nickel};
@@ -156,6 +156,9 @@ pub fn create_server() -> Nickel {
    * @apiError 409 Queue already exists
    */
   server.put("/queue/:queue_name", create_queue_handler);
+
+  server.delete("/queue/:queue_name/purge", purge_queue_handler);
+  server.delete("/queue/:queue_name", delete_queue_handler);
 
   server
 }
