@@ -12,10 +12,17 @@ use std::thread;
 use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+enum MessageState {
+  Pending,
+  Requeued,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message {
   id: String,
   queued_at: u64,
   item: Value,
+  state: MessageState,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -266,6 +273,7 @@ impl Queue {
       id: id.clone(),
       item,
       queued_at: timestamp(),
+      state: MessageState::Pending,
     };
     self.items.push_back(message.clone());
     if self.persistent {
@@ -304,11 +312,13 @@ impl Queue {
         let queue = this_queue.unwrap();
         let message = queue.ack_map.remove(&message_id);
         if message.is_some() {
-          queue.items.push_back(message.clone().unwrap());
+          let mut new_message = message.unwrap().clone();
+          new_message.state = MessageState::Requeued;
+          queue.items.push_back(new_message.clone());
           queue.meta.num_requeued += 1;
           if queue.persistent {
             write_metadata(&queue.id, &queue.meta);
-            let line = serde_json::to_string(&message)
+            let line = serde_json::to_string(&new_message)
               .ok()
               .expect("JSON stringify error");
             append_to_file(

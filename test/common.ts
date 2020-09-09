@@ -3,11 +3,17 @@ import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
 import { ObjectHandler } from "@dotvirus/yxc/dist/handlers/object";
 
+enum MessageState {
+  Pending = "Pending",
+  Requeued = "Requeued",
+}
+
 export const Message = (item: ObjectHandler = yxc.object().arbitrary()) =>
   yxc.object({
     id: yxc.string(),
     queued_at: yxc.number(),
     item,
+    state: yxc.string().enum(Object.values(MessageState)),
   });
 
 export function queueUrl(name: string) {
