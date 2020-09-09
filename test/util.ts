@@ -5,6 +5,18 @@ export const PORT = +(process.env.CORINTH_PORT || 6767);
 export const IP = `http://localhost:${PORT}`;
 export const getUrl = (route: string) => IP + route;
 
+export function countSync<T>(
+  arr: T[],
+  pred: (item: T, index: number, arr: T[]) => boolean
+) {
+  let count = 0;
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (pred(item, i, arr)) count++;
+  }
+  return count;
+}
+
 // Return cross-platform file name of executable
 // myfile for Linux & Mac
 // myfile.exe for Windows

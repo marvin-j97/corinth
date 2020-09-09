@@ -3,6 +3,7 @@ import Axios from "axios";
 import { spawnCorinth, NO_FAIL } from "../util";
 import { queueUrl as getQueueUrl, createQueue } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import { existsSync } from "fs";
 
 spawnCorinth();
 
@@ -48,6 +49,8 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
+  t.is(existsSync(".corinth/new_queue/meta.json"), false);
+  t.is(existsSync(".corinth/new_queue/items.jsonl"), false);
 });
 
 ava.serial("Queue should be empty", async (t) => {

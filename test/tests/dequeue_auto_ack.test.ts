@@ -12,7 +12,7 @@ const dequeueUrl = queueUrl + "/dequeue";
 const axiosConfig = {
   ...NO_FAIL(),
   params: {
-    ack: "true",
+    ack: true,
   },
 };
 
