@@ -2,19 +2,21 @@ import execa from "execa";
 import { platform } from "os";
 import { rmdirSync, existsSync } from "fs";
 
+import debug from "debug";
+
 export const PORT = +(process.env.CORINTH_PORT || 6767);
 export const IP = `http://localhost:${PORT}`;
 export const getUrl = (route: string) => IP + route;
 
 export function persistenceTeardown() {
-  console.log("Test teardown");
+  debug("test:message")("Running test teardown");
 
   try {
     rmdirSync(".corinth", { recursive: true });
   } catch (error) {}
 
   if (existsSync(".corinth")) {
-    console.error("ERROR: Test teardown failed");
+    debug("test:error")("Test teardown failed");
     process.exit(1);
   }
 }
@@ -41,12 +43,14 @@ function executableName(filename: string) {
 export function spawnCorinth() {
   const exeName = executableName("corinth");
   const path = `../target/debug/${exeName}`;
-  console.error(`Spawning ${path} with port ${PORT}`);
+  debug("test:message")(`Spawning ${path} with port ${PORT}`);
   const proc = execa(path, {
-    stdout: process.stdout,
     env: {
       CORINTH_PORT: PORT.toString(),
     },
+  });
+  proc.stdout?.on("data", (msg) => {
+    debug("corinth")(msg.toString());
   });
   return proc;
 }

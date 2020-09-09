@@ -9,19 +9,10 @@ import {
 } from "../../util";
 import { queueUrl as getQueueUrl, createQueue, Message } from "../../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
-import { existsSync, readFileSync, rmdirSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 
 before(persistenceTeardown);
 after(persistenceTeardown);
-
-after(() => {
-  console.log("Teardown " + __filename);
-  try {
-    rmdirSync(".corinth", { recursive: true });
-  } catch (error) {
-    console.warn("WARN: Test teardown failed");
-  }
-});
 
 let corinth = spawnCorinth();
 
