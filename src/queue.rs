@@ -1,16 +1,31 @@
 use crate::date::timestamp;
+use crate::env::data_folder;
+use crate::fs::{append_to_file, file_exists};
 use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::fs::{create_dir_all, read_to_string, rename, File};
+use std::io::{BufRead, BufReader, Write};
+use std::mem::size_of;
 use std::thread;
 use std::time::Duration;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message {
   id: String,
   queued_at: u64,
   item: Value,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct QueueMeta {
+  created_at: u64,
+  num_acknowledged: u64,
+  num_dedup_hits: u64,
+  num_ack_misses: u64,
+  ack_time: u32,
+  dedup_time: u32,
 }
 
 pub struct Queue {
@@ -20,27 +35,176 @@ pub struct Queue {
   dedup_set: HashSet<String>,
   ack_map: HashMap<String, Message>,
 
-  created_at: u64,
-  num_acknowledged: u64,
-  num_dedup_hits: u64,
+  meta: QueueMeta,
 
-  ack_time: u32,
-  dedup_time: u32,
+  persistent: bool,
+}
+
+// Returns the relative folder path in which
+// the queue is stored (items & metadata)
+fn get_queue_folder(id: &String) -> String {
+  format!("{}/{}", data_folder(), id)
+}
+
+pub fn queue_meta_file(id: &String) -> String {
+  format!("{}/meta.json", get_queue_folder(&id))
+}
+
+// Returns the relative path to the persistent storage file
+// of the queue's items
+fn queue_item_file(id: &String, suffix: String) -> String {
+  format!("{}/items{}.jsonl", get_queue_folder(&id), suffix)
+}
+
+// Temp file to write into
+fn queue_temp_file(id: &String) -> String {
+  queue_item_file(&id, String::from("~"))
+}
+
+// Reads a file and returns the resulting queue
+// Keeps track of which items were deleted, and is ordered
+// the same way the file is ordered
+fn read_file(file: &String) -> VecDeque<Message> {
+  // Sequence of message IDs (keep track of order)
+  let mut loaded_files_queue: Vec<String> = Vec::new();
+  // Dictionary of all items
+  let mut item_dictionary: HashMap<String, Message> = HashMap::new();
+
+  let deleted_flag = "$corinth_deleted";
+
+  // Read file line-by-line
+  // Keep track which files are deleted
+  // and store the order in which the items appeared
+  let file = File::open(&file).expect("Couldn't open items.jsonl");
+  let reader = BufReader::new(file);
+  for line in reader.lines() {
+    let line = line.unwrap();
+    let obj: Value = serde_json::from_str(&line).expect("JSON parse failed");
+    if obj[deleted_flag].is_string() {
+      let id = obj[deleted_flag].as_str().unwrap();
+      item_dictionary.remove(id);
+    } else {
+      let id = obj["id"].as_str().unwrap();
+      let msg: Message = serde_json::from_str(&line).expect("JSON parse failed");
+      item_dictionary.insert(String::from(id), msg);
+      loaded_files_queue.push(String::from(id));
+    }
+  }
+
+  let mut stack: VecDeque<Message> = VecDeque::new();
+
+  // Only return items that were not deleted
+  for id in loaded_files_queue.iter().rev() {
+    let msg = item_dictionary.get(id);
+    if msg.is_some() {
+      stack.push_back(msg.unwrap().clone());
+      item_dictionary.remove(id);
+    }
+  }
+
+  // Result queue
+  let mut items: VecDeque<Message> = VecDeque::new();
+
+  while !stack.is_empty() {
+    let message = stack.pop_back().unwrap();
+    items.push_back(message);
+  }
+
+  items
+}
+
+// Write all items into a temp file
+// Then rename tmp_file ~> real_file
+fn compact_file(write_file: &String, compact_to: &String, items: &VecDeque<Message>) {
+  File::create(write_file).expect("Failed to create temporary write file");
+
+  for item in items.iter() {
+    let line = serde_json::to_string(&item)
+      .ok()
+      .expect("JSON stringify error");
+    append_to_file(write_file, format!("{}\n", line));
+  }
+
+  rename(write_file, &compact_to).expect("Failed to compact queue items");
+}
+
+// Initializes the queue's item queue from disk
+fn init_items(id: &String) -> VecDeque<Message> {
+  let mut items: VecDeque<Message> = VecDeque::new();
+
+  let queue_item_file = queue_item_file(&id, String::from(""));
+  if file_exists(&queue_item_file) {
+    items = read_file(&queue_item_file);
+    // Minimize file size
+    compact_file(&queue_temp_file(&id), &queue_item_file, &items);
+  }
+
+  items
+}
+
+fn write_metadata(id: &String, meta: &QueueMeta) {
+  let mut writer = File::create(queue_meta_file(&id)).expect("unable to create meta file");
+  writer
+    .write_all(serde_json::to_string(&meta).unwrap().as_bytes())
+    .expect("unable to write");
 }
 
 impl Queue {
-  // Create a new empty queue
-  pub fn new(id: String, ack_time: u32, dedup_time: u32) -> Queue {
-    return Queue {
-      id,
-      items: VecDeque::new(),
+  pub fn get_mem_size(&self) -> usize {
+    size_of::<Queue>()
+      + self.size() * size_of::<Message>()
+      + self.ack_size() * size_of::<Message>()
+      + self.dedup_size() * size_of::<String>()
+  }
+
+  // Read queue from disk
+  pub fn from_disk(id: String) -> Queue {
+    let items: VecDeque<Message> = init_items(&id);
+    let mut queue = Queue {
+      id: id.clone(),
+      items,
       dedup_set: HashSet::new(),
       ack_map: HashMap::new(),
+      meta: QueueMeta {
+        num_ack_misses: 0,
+        num_dedup_hits: 0,
+        num_acknowledged: 0,
+        created_at: timestamp(),
+        ack_time: 300,
+        dedup_time: 300,
+      },
+      persistent: true,
+    };
+    let metadata_file = queue_meta_file(&id);
+    let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
+    let metadata: QueueMeta = serde_json::from_str(&metadata).expect("Couldn't read metadata file");
+    queue.meta = metadata;
+    queue
+  }
+
+  // Create a new empty queue
+  pub fn new(id: String, ack_time: u32, dedup_time: u32, persistent: bool) -> Queue {
+    let items: VecDeque<Message> = VecDeque::new();
+    // TODO: compact interval
+    let meta = QueueMeta {
+      num_ack_misses: 0,
       num_dedup_hits: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
       ack_time,
       dedup_time,
+    };
+    if persistent {
+      create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+      write_metadata(&id, &meta);
+    }
+    return Queue {
+      id,
+      items,
+      dedup_set: HashSet::new(),
+      ack_map: HashMap::new(),
+      meta,
+      persistent,
     };
   }
 
@@ -51,7 +215,10 @@ impl Queue {
     let item = self.ack_map.get(&id);
     if item.is_some() {
       self.ack_map.remove(&id);
-      self.num_acknowledged += 1;
+      self.meta.num_acknowledged += 1;
+      if self.persistent {
+        write_metadata(&self.id, &self.meta);
+      }
       true
     } else {
       false
@@ -79,10 +246,13 @@ impl Queue {
       let d_id = dedup_id.unwrap();
       let dedup_in_map = self.dedup_set.contains(&d_id);
       if dedup_in_map {
-        self.num_dedup_hits += 1;
+        self.meta.num_dedup_hits += 1;
+        if self.persistent {
+          write_metadata(&self.id, &self.meta);
+        }
         return false;
       }
-      let lifetime = self.dedup_time.into();
+      let lifetime = self.meta.dedup_time.into();
       self.dedup_set.insert(d_id.clone());
       if lifetime > 0 {
         self.schedule_dedup_item(d_id, lifetime);
@@ -93,11 +263,20 @@ impl Queue {
 
   fn enqueue(&mut self, id: String, item: Value) -> Message {
     let message = Message {
-      id,
+      id: id.clone(),
       item,
       queued_at: timestamp(),
     };
     self.items.push_back(message.clone());
+    if self.persistent {
+      let line = serde_json::to_string(&message)
+        .ok()
+        .expect("JSON stringify error");
+      append_to_file(
+        &queue_item_file(&self.id, String::from("")),
+        format!("{}\n", line),
+      );
+    }
     message
   }
 
@@ -125,7 +304,18 @@ impl Queue {
         let queue = this_queue.unwrap();
         let message = queue.ack_map.remove(&message_id);
         if message.is_some() {
-          queue.items.push_back(message.unwrap());
+          queue.items.push_back(message.clone().unwrap());
+          queue.meta.num_ack_misses += 1;
+          if queue.persistent {
+            write_metadata(&queue.id, &queue.meta);
+            let line = serde_json::to_string(&message)
+              .ok()
+              .expect("JSON stringify error");
+            append_to_file(
+              &queue_item_file(&queue.id, String::from("")),
+              format!("{}\n", line),
+            );
+          }
         }
       }
     });
@@ -145,11 +335,19 @@ impl Queue {
     let item_maybe = self.peek();
     if item_maybe.is_some() {
       self.items.pop_front();
+      if self.persistent {
+        let id = item_maybe.clone().unwrap().id;
+        let line = format!("{{\"$corinth_deleted\":\"{}\" }}\n", id);
+        append_to_file(&queue_item_file(&self.id, String::from("")), line);
+      }
       if auto_ack {
-        self.num_acknowledged += 1;
+        self.meta.num_acknowledged += 1;
+        if self.persistent {
+          write_metadata(&self.id, &self.meta);
+        }
       } else {
         let message = item_maybe.clone().unwrap();
-        let lifetime = self.ack_time.into();
+        let lifetime = self.meta.ack_time.into();
         if lifetime > 0 {
           self.schedule_ack_item(message, lifetime);
         }
@@ -166,17 +364,17 @@ impl Queue {
 
   // Returns the amount of successfully acknowledges messages
   pub fn num_acknowledged(&self) -> u64 {
-    self.num_acknowledged
+    self.meta.num_acknowledged
   }
 
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {
-    self.created_at
+    self.meta.created_at
   }
 
   // Returns the amount of dedup hits
   pub fn num_dedup_hits(&self) -> u64 {
-    self.num_dedup_hits
+    self.meta.num_dedup_hits
   }
 
   // Returns the amount of deduplication ids currently being tracked
@@ -190,10 +388,18 @@ impl Queue {
   }
 
   pub fn dedup_time(&self) -> u32 {
-    self.dedup_time
+    self.meta.dedup_time
   }
 
   pub fn ack_time(&self) -> u32 {
-    self.ack_time
+    self.meta.ack_time
+  }
+
+  pub fn is_persistent(&self) -> bool {
+    self.persistent
+  }
+
+  pub fn num_ack_misses(&self) -> u64 {
+    self.meta.num_ack_misses
   }
 }

@@ -1,5 +1,9 @@
 {
   "scripts": {
+    "doc": "apidoc -i src -o api-doc -v -f \".*\\.rs$\"",
     "test": "cd test && npm test"
+  },
+  "devDependencies": {
+    "apidoc": "^0.25.0"
   }
 }
