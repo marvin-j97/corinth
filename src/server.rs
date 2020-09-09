@@ -157,7 +157,24 @@ pub fn create_server() -> Nickel {
    */
   server.put("/queue/:queue_name", create_queue_handler);
 
+  #[allow(unused_doc_comments)]
+  /**
+   * @api {delete} /queue/:queue/purge Purge queue state
+   * @apiName PurgeQueue
+   * @apiGroup Queue
+   *
+   * @apiError 404 Queue not found
+   */
   server.delete("/queue/:queue_name/purge", purge_queue_handler);
+
+  #[allow(unused_doc_comments)]
+  /**
+   * @api {delete} /queue/:queue Delete queue
+   * @apiName DeleteQueue
+   * @apiGroup Queue
+   *
+   * @apiError 404 Queue not found
+   */
   server.delete("/queue/:queue_name", delete_queue_handler);
 
   server
