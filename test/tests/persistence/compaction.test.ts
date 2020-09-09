@@ -1,6 +1,6 @@
 import ava, { before, after } from "ava";
 import Axios from "axios";
-import { spawnCorinth, NO_FAIL, countSync } from "../../util";
+import { spawnCorinth, NO_FAIL, countSync, sleep } from "../../util";
 import { queueUrl as getQueueUrl, createQueue, Message } from "../../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 import { existsSync, readFileSync, rmdirSync } from "fs";
@@ -240,9 +240,10 @@ ava.serial(`${NUM_ITEMS - 2} items should be queued`, async (t) => {
   );
 });
 
-ava.serial("Stop exe", (t) => {
+ava.serial("Stop exe", async (t) => {
   corinth.kill();
   corinth = spawnCorinth();
+  await sleep(1000);
   t.pass();
 });
 

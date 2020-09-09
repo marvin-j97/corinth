@@ -28,12 +28,13 @@ export function spawnCorinth() {
   const exeName = executableName("corinth");
   const path = `../target/debug/${exeName}`;
   console.error(`Spawning ${path} with port ${PORT}`);
-  return execa(path, {
+  const proc = execa(path, {
     stdout: process.stdout,
     env: {
       CORINTH_PORT: PORT.toString(),
     },
   });
+  return proc;
 }
 
 export function unixToHammer(unix: number) {
