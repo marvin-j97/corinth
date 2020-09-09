@@ -1,0 +1,26 @@
+name: Build Windows release
+
+on:
+  release:
+    types: created
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --release
+    - name: Attach
+      uses: softprops/action-gh-release@v1
+      if: starsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          target/release/corinth
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
