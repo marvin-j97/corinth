@@ -19,7 +19,7 @@ jobs:
         run: mv target/release/corinth.exe target/release/corinth-${{ github.event.release.tag_name }}.exe
       - name: Attach to ${{ github.event.release.tag_name }}
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.event.release.tag_name, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             target/release/corinth-${{ github.event.release.tag_name }}.exe
