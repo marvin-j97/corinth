@@ -16,12 +16,12 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Rename
-        run: mv target/release/corinth target/release/corinth-mac-${{ github.ref }}
-      - name: Attach to ${{ github.ref }}
+        run: mv target/release/corinth target/release/corinth-mac-${{ github.event.release.tag_name }}
+      - name: Attach to ${{ github.event.release.tag_name }}
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.event.release.tag_name, 'refs/tags/')
         with:
           files: |
-            target/release/corinth-mac-${{ github.ref }}
+            target/release/corinth-mac-${{ github.event.release.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
