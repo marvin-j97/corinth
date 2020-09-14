@@ -40,6 +40,8 @@ function executableName(filename: string) {
   return filename + (platform() === "win32" ? ".exe" : "");
 }
 
+const corinthLog = debug("corinth");
+
 export function spawnCorinth() {
   const exeName = executableName("corinth");
   const path = `../target/debug/${exeName}`;
@@ -50,7 +52,7 @@ export function spawnCorinth() {
     },
   });
   proc.stdout?.on("data", (msg) => {
-    debug("corinth")(msg.toString());
+    corinthLog(msg.toString());
   });
   return proc;
 }
