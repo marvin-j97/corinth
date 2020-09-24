@@ -72,49 +72,22 @@ fn queue_temp_file(id: &String) -> String {
 // Keeps track of which items were deleted, and is ordered
 // the same way the file is ordered
 fn read_file(file: &String) -> VecDeque<Message> {
-  // Sequence of message IDs (keep track of order)
-  let mut loaded_files_queue: Vec<String> = Vec::new();
-  // Dictionary of all items
-  let mut item_dictionary: HashMap<String, Message> = HashMap::new();
-
+  // Result queue
+  let mut items: VecDeque<Message> = VecDeque::new();
   let deleted_flag = "$corinth_deleted";
 
   // Read file line-by-line
-  // Keep track which files are deleted
-  // and store the order in which the items appeared
   let file = File::open(&file).expect("Couldn't open items.jsonl");
   let reader = BufReader::new(file);
   for line in reader.lines() {
     let line = line.unwrap();
     let obj: Value = serde_json::from_str(&line).expect("JSON parse failed");
     if obj[deleted_flag].is_string() {
-      let id = obj[deleted_flag].as_str().unwrap();
-      item_dictionary.remove(id);
+      items.pop_front();
     } else {
-      let id = obj["id"].as_str().unwrap();
       let msg: Message = serde_json::from_str(&line).expect("JSON parse failed");
-      item_dictionary.insert(String::from(id), msg);
-      loaded_files_queue.push(String::from(id));
+      items.push_back(msg);
     }
-  }
-
-  let mut stack: VecDeque<Message> = VecDeque::new();
-
-  // Only return items that were not deleted
-  for id in loaded_files_queue.iter().rev() {
-    let msg = item_dictionary.get(id);
-    if msg.is_some() {
-      stack.push_back(msg.unwrap().clone());
-      item_dictionary.remove(id);
-    }
-  }
-
-  // Result queue
-  let mut items: VecDeque<Message> = VecDeque::new();
-
-  while !stack.is_empty() {
-    let message = stack.pop_back().unwrap();
-    items.push_back(message);
   }
 
   items
