@@ -22,7 +22,7 @@ struct EnqueueBody {
 }
 
 pub fn logger<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
-  println!(
+  eprintln!(
     "{} {}: {}",
     req.origin.method.to_string(),
     req.origin.uri.to_string(),

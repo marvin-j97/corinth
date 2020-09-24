@@ -32,13 +32,13 @@ pub fn read_queues_from_disk() {
     if metadata(file.path()).unwrap().is_dir() {
       if file_exists(&queue_meta_file(&queue_name)) {
         let queue = Queue::from_disk(queue_name.clone());
-        println!("Read queue '{}' from disk", queue_name);
+        eprintln!("Read queue '{}' from disk", queue_name);
         queue_map.insert(queue_name, queue);
       } else {
-        println!("Metadata file not found, skipping...")
+        eprintln!("Metadata file not found, skipping...")
       }
     } else {
-      println!("File in CORINTH_BASE_FOLDER not a folder, skipping...")
+      eprintln!("File in CORINTH_BASE_FOLDER not a folder, skipping...")
     }
   }
 }
