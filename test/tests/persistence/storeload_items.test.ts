@@ -39,8 +39,8 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
-  t.is(existsSync(".corinth/storeload/meta.json"), true);
-  t.is(existsSync(".corinth/storeload/items.jsonl"), false);
+  t.is(existsSync(".corinth/queues/storeload/meta.json"), true);
+  t.is(existsSync(".corinth/queues/storeload/items.jsonl"), false);
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -121,7 +121,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       []
     );
   }
-  t.is(existsSync(".corinth/storeload/items.jsonl"), true);
+  t.is(existsSync(".corinth/queues/storeload/items.jsonl"), true);
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {

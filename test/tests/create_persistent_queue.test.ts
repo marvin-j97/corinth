@@ -14,6 +14,8 @@ const queueName = "persistent_new_queue_test";
 const queueUrl = getQueueUrl(queueName);
 
 ava.serial("Create persistent queue", async (t) => {
+  t.is(existsSync(`.corinth/queues/${queueName}/meta.json`), false);
+  t.is(existsSync(`.corinth/queues/${queueName}/items.jsonl`), false);
   const res = await createQueue(queueName, {
     ...NO_FAIL(),
     params: {
@@ -72,6 +74,6 @@ ava.serial("Queue should be empty", async (t) => {
     )(res),
     []
   );
-  t.is(existsSync(`.corinth/${queueName}/meta.json`), true);
-  t.is(existsSync(`.corinth/${queueName}/items.jsonl`), false);
+  t.is(existsSync(`.corinth/queues/${queueName}/meta.json`), true);
+  t.is(existsSync(`.corinth/queues/${queueName}/items.jsonl`), false);
 });

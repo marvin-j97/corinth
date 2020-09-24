@@ -41,8 +41,8 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
-  t.is(existsSync(".corinth/loadorder_test/meta.json"), true);
-  t.is(existsSync(".corinth/loadorder_test/items.jsonl"), false);
+  t.is(existsSync(".corinth/queues/loadorder_test/meta.json"), true);
+  t.is(existsSync(".corinth/queues/loadorder_test/items.jsonl"), false);
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -165,7 +165,10 @@ ava.serial(`7 items should be queued`, async (t) => {
     )(res),
     []
   );
-  const itemOrder = readFileSync(".corinth/loadorder_test/items.jsonl", "utf-8")
+  const itemOrder = readFileSync(
+    ".corinth/queues/loadorder_test/items.jsonl",
+    "utf-8"
+  )
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line))
@@ -184,8 +187,9 @@ ava.serial("Dequeue 0 & 1", async (t) => {
     const res = await Axios.post(dequeueUrl, null, axiosConfig);
   }
   t.is(
-    JSON.parse(readFileSync(".corinth/loadorder_test/meta.json", "utf-8"))
-      .num_acknowledged,
+    JSON.parse(
+      readFileSync(".corinth/queues/loadorder_test/meta.json", "utf-8")
+    ).num_acknowledged,
     2
   );
 });
@@ -317,7 +321,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
   );
 
   const itemsInFile = readFileSync(
-    ".corinth/loadorder_test/items.jsonl",
+    ".corinth/queues/loadorder_test/items.jsonl",
     "utf-8"
   )
     .split("\n")
@@ -329,7 +333,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
     itemsInFile.every((item) => item["$corinth_deleted"] === undefined),
     true
   );
-  t.is(existsSync(".corinth/loadorder_test/items~.jsonl"), false);
+  t.is(existsSync(".corinth/queues/loadorder_test/items~.jsonl"), false);
 
   const itemOrder = itemsInFile.map((msg) => msg.item.index);
 

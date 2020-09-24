@@ -50,7 +50,7 @@ pub struct Queue {
 // Returns the relative folder path in which
 // the queue is stored (items & metadata)
 pub fn get_queue_folder(id: &String) -> String {
-  format!("{}/{}", data_folder(), id)
+  format!("{}/queues/{}", data_folder(), id)
 }
 
 pub fn queue_meta_file(id: &String) -> String {

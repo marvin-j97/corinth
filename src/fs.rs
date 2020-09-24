@@ -17,8 +17,8 @@ pub fn append_to_file(path: &String, text: String) {
   file.write_all(text.as_bytes()).expect("Append failed");
 }
 
-pub fn create_data_folder() -> String {
-  let folder = data_folder();
+pub fn create_queues_folder() -> String {
+  let folder = format!("{}/queues", data_folder());
   create_dir_all(&folder).ok();
   folder
 }

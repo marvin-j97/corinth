@@ -47,8 +47,8 @@ ava.serial("Create queue", async (t) => {
     )(res),
     []
   );
-  t.is(existsSync(".corinth/compaction_test/meta.json"), true);
-  t.is(existsSync(".corinth/compaction_test/items.jsonl"), false);
+  t.is(existsSync(".corinth/queues/compaction_test/meta.json"), true);
+  t.is(existsSync(".corinth/queues/compaction_test/items.jsonl"), false);
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -129,7 +129,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       []
     );
   }
-  t.is(existsSync(".corinth/compaction_test/items.jsonl"), true);
+  t.is(existsSync(".corinth/queues/compaction_test/items.jsonl"), true);
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
@@ -206,13 +206,14 @@ ava.serial(`${NUM_ITEMS - 2} items should be queued`, async (t) => {
     []
   );
   t.is(
-    JSON.parse(readFileSync(".corinth/compaction_test/meta.json", "utf-8"))
-      .num_acknowledged,
+    JSON.parse(
+      readFileSync(".corinth/queues/compaction_test/meta.json", "utf-8")
+    ).num_acknowledged,
     2
   );
 
   const itemsInFile = readFileSync(
-    ".corinth/compaction_test/items.jsonl",
+    ".corinth/queues/compaction_test/items.jsonl",
     "utf-8"
   )
     .split("\n")
@@ -270,7 +271,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
   );
 
   const itemsInFile = readFileSync(
-    ".corinth/compaction_test/items.jsonl",
+    ".corinth/queues/compaction_test/items.jsonl",
     "utf-8"
   )
     .split("\n")
@@ -282,5 +283,5 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
     itemsInFile.every((item) => item["$corinth_deleted"] === undefined),
     true
   );
-  t.is(existsSync(".corinth/compaction_test/items~.jsonl"), false);
+  t.is(existsSync(".corinth/queues/compaction_test/items~.jsonl"), false);
 });

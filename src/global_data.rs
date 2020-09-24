@@ -1,4 +1,4 @@
-use crate::fs::create_data_folder;
+use crate::fs::create_queues_folder;
 use crate::fs::file_exists;
 use crate::queue::{queue_meta_file, Queue};
 use lazy_static::lazy_static;
@@ -23,7 +23,7 @@ pub fn queue_exists(req: &mut Request) -> bool {
 }
 
 pub fn read_queues_from_disk() {
-  let folder = create_data_folder();
+  let folder = create_queues_folder();
   let entries = read_dir(folder).expect("readdir failed");
   let mut queue_map = QUEUES.lock().unwrap();
   for entry in entries {
