@@ -1,3 +1,4 @@
+use crate::queue::Queue;
 use serde_json::json;
 use std::time::SystemTime;
 
@@ -52,7 +53,7 @@ fn simple_benchmark(size: u32) -> u64 {
 }
 
 fn memory_test(size: u32) -> u64 {
-  let mut queue = crate::queue::Queue::new("test0".to_string(), 300, 300, false);
+  let mut queue = Queue::new("test0".to_string(), 300, 300, false);
   {
     let now = SystemTime::now();
     eprintln!("\nEnqueuing {} items", size);
@@ -100,7 +101,7 @@ pub fn benchmark() {
   eprintln!(
     "Max memory usage: {} bytes ({} MB)",
     max_mem_size,
-    bytes_to_mb(max_mem_size) 
+    bytes_to_mb(max_mem_size)
   );
   eprintln!(
     "High memory test: {} items -> {} bytes ({} MB)",

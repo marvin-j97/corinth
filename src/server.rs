@@ -1,10 +1,7 @@
 use crate::date::elapsed_secs;
 use crate::date::timestamp;
 use crate::response::format_success;
-use crate::routes::{
-  ack_message, create_queue_handler, delete_queue_handler, dequeue_handler, enqueue_handler,
-  favicon_handler, list_queues, logger, peek_handler, purge_queue_handler, queue_info,
-};
+use crate::routes;
 use nickel::status::StatusCode;
 use nickel::{HttpRouter, MediaType, Nickel};
 use serde_json::json;
@@ -15,8 +12,8 @@ pub fn create_server() -> Nickel {
   let start_time = Instant::now();
 
   // Logger middleware
-  server.utilize(logger);
-  server.get("/favicon.ico", favicon_handler);
+  server.utilize(routes::logger);
+  server.get("/favicon.ico", routes::favicon_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -58,7 +55,7 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {String} result:queues:items Queue names
    * @apiSuccess {Number} result:queues:length Amount of queues
    */
-  server.get("/queues", list_queues);
+  server.get("/queues", routes::list_queues);
 
   #[allow(unused_doc_comments)]
   /**
@@ -80,7 +77,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiError 404 Queue not found
    */
-  server.get("/queue/:queue_name", queue_info);
+  server.get("/queue/:queue_name", routes::queue_info);
 
   #[allow(unused_doc_comments)]
   /**
@@ -91,7 +88,7 @@ pub fn create_server() -> Nickel {
    * @apiError 404 Message not found
    * @apiError 404 Queue not found
    */
-  server.post("/queue/:queue_name/:message/ack", ack_message);
+  server.post("/queue/:queue_name/:message/ack", routes::ack_message);
 
   #[allow(unused_doc_comments)]
   /**
@@ -111,7 +108,7 @@ pub fn create_server() -> Nickel {
    * @apiError 400 body.items is required to be of type Array<Object>
    * @apiError 404 Queue not found
    */
-  server.post("/queue/:queue_name/enqueue", enqueue_handler);
+  server.post("/queue/:queue_name/enqueue", routes::enqueue_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -128,7 +125,7 @@ pub fn create_server() -> Nickel {
    * @apiError 400 Invalid amount parameter
    * @apiError 404 Queue not found
    */
-  server.post("/queue/:queue_name/dequeue", dequeue_handler);
+  server.post("/queue/:queue_name/dequeue", routes::dequeue_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -140,7 +137,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiError 404 Queue not found
    */
-  server.get("/queue/:queue_name/peek", peek_handler);
+  server.get("/queue/:queue_name/peek", routes::peek_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -155,7 +152,7 @@ pub fn create_server() -> Nickel {
    * @apiError 400 Invalid time argument
    * @apiError 409 Queue already exists
    */
-  server.put("/queue/:queue_name", create_queue_handler);
+  server.put("/queue/:queue_name", routes::create_queue_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -165,7 +162,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiError 404 Queue not found
    */
-  server.delete("/queue/:queue_name/purge", purge_queue_handler);
+  server.delete("/queue/:queue_name/purge", routes::purge_queue_handler);
 
   #[allow(unused_doc_comments)]
   /**
@@ -175,7 +172,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiError 404 Queue not found
    */
-  server.delete("/queue/:queue_name", delete_queue_handler);
+  server.delete("/queue/:queue_name", routes::delete_queue_handler);
 
   server
 }
