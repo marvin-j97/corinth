@@ -21,8 +21,10 @@ enum MessageState {
 pub struct Message {
   id: String,
   queued_at: u64,
+  updated_at: u64,
   item: Value,
   state: MessageState,
+  num_requeues: u16,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -242,11 +244,14 @@ impl Queue {
   }
 
   fn enqueue(&mut self, id: String, item: Value) -> Message {
+    let now = timestamp();
     let message = Message {
       id: id.clone(),
       item,
-      queued_at: timestamp(),
+      queued_at: now,
+      updated_at: now,
       state: MessageState::Pending,
+      num_requeues: 0,
     };
     self.items.push_back(message.clone());
     if self.persistent {
@@ -287,6 +292,8 @@ impl Queue {
         if message.is_some() {
           let mut new_message = message.unwrap().clone();
           new_message.state = MessageState::Requeued;
+          new_message.updated_at = timestamp();
+          new_message.num_requeues += 1;
           queue.items.push_back(new_message.clone());
           queue.meta.num_requeued += 1;
           if queue.persistent {
