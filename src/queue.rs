@@ -21,8 +21,10 @@ enum MessageState {
 pub struct Message {
   id: String,
   queued_at: u64,
+  updated_at: u64,
   item: Value,
   state: MessageState,
+  num_requeues: u16,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -241,16 +243,10 @@ impl Queue {
     true
   }
 
-  fn enqueue(&mut self, id: String, item: Value) -> Message {
-    let message = Message {
-      id: id.clone(),
-      item,
-      queued_at: timestamp(),
-      state: MessageState::Pending,
-    };
-    self.items.push_back(message.clone());
+  fn enqueue_message(&mut self, msg: Message) -> Message {
+    self.items.push_back(msg.clone());
     if self.persistent {
-      let line = serde_json::to_string(&message)
+      let line = serde_json::to_string(&msg)
         .ok()
         .expect("JSON stringify error");
       append_to_file(
@@ -258,7 +254,20 @@ impl Queue {
         format!("{}\n", line),
       );
     }
-    message
+    msg
+  }
+
+  fn enqueue_item(&mut self, id: String, item: Value) -> Message {
+    let now = timestamp();
+    let message = Message {
+      id: id.clone(),
+      item,
+      queued_at: now,
+      updated_at: now,
+      state: MessageState::Pending,
+      num_requeues: 0,
+    };
+    self.enqueue_message(message)
   }
 
   // Tries to enqueue the given item
@@ -267,7 +276,7 @@ impl Queue {
   pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> Option<Message> {
     let id = ulid_str();
     if self.register_dedup_id(dedup_id) {
-      return Some(self.enqueue(id, item));
+      return Some(self.enqueue_item(id, item));
     }
     None
   }
@@ -287,18 +296,10 @@ impl Queue {
         if message.is_some() {
           let mut new_message = message.unwrap().clone();
           new_message.state = MessageState::Requeued;
-          queue.items.push_back(new_message.clone());
+          new_message.updated_at = timestamp();
+          new_message.num_requeues += 1;
           queue.meta.num_requeued += 1;
-          if queue.persistent {
-            write_metadata(&queue.id, &queue.meta);
-            let line = serde_json::to_string(&new_message)
-              .ok()
-              .expect("JSON stringify error");
-            append_to_file(
-              &queue_item_file(&queue.id, String::from("")),
-              format!("{}\n", line),
-            );
-          }
+          queue.enqueue_message(new_message);
         }
       }
     });
