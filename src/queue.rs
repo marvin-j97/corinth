@@ -243,7 +243,21 @@ impl Queue {
     true
   }
 
-  fn enqueue(&mut self, id: String, item: Value) -> Message {
+  fn enqueue_message(&mut self, msg: Message) -> Message {
+    self.items.push_back(msg.clone());
+    if self.persistent {
+      let line = serde_json::to_string(&msg)
+        .ok()
+        .expect("JSON stringify error");
+      append_to_file(
+        &queue_item_file(&self.id, String::from("")),
+        format!("{}\n", line),
+      );
+    }
+    msg
+  }
+
+  fn enqueue_item(&mut self, id: String, item: Value) -> Message {
     let now = timestamp();
     let message = Message {
       id: id.clone(),
@@ -253,17 +267,7 @@ impl Queue {
       state: MessageState::Pending,
       num_requeues: 0,
     };
-    self.items.push_back(message.clone());
-    if self.persistent {
-      let line = serde_json::to_string(&message)
-        .ok()
-        .expect("JSON stringify error");
-      append_to_file(
-        &queue_item_file(&self.id, String::from("")),
-        format!("{}\n", line),
-      );
-    }
-    message
+    self.enqueue_message(message)
   }
 
   // Tries to enqueue the given item
@@ -272,7 +276,7 @@ impl Queue {
   pub fn try_enqueue(&mut self, item: Value, dedup_id: Option<String>) -> Option<Message> {
     let id = ulid_str();
     if self.register_dedup_id(dedup_id) {
-      return Some(self.enqueue(id, item));
+      return Some(self.enqueue_item(id, item));
     }
     None
   }
@@ -294,18 +298,8 @@ impl Queue {
           new_message.state = MessageState::Requeued;
           new_message.updated_at = timestamp();
           new_message.num_requeues += 1;
-          queue.items.push_back(new_message.clone());
           queue.meta.num_requeued += 1;
-          if queue.persistent {
-            write_metadata(&queue.id, &queue.meta);
-            let line = serde_json::to_string(&new_message)
-              .ok()
-              .expect("JSON stringify error");
-            append_to_file(
-              &queue_item_file(&queue.id, String::from("")),
-              format!("{}\n", line),
-            );
-          }
+          queue.enqueue_message(new_message);
         }
       }
     });
