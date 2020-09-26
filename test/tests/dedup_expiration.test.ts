@@ -3,6 +3,9 @@ import Axios from "axios";
 import { spawnCorinth, NO_FAIL, sleep, persistenceTeardown } from "../util";
 import { queueUrl as getQueueUrl, createQueue, Message } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);

@@ -1,6 +1,9 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 export enum MessageState {
   Pending = "Pending",

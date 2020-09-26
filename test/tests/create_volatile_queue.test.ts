@@ -4,6 +4,9 @@ import { spawnCorinth, NO_FAIL, persistenceTeardown } from "../util";
 import { queueUrl as getQueueUrl, createQueue } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 import { existsSync } from "fs";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);

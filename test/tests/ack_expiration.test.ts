@@ -8,6 +8,9 @@ import {
   MessageState,
 } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);

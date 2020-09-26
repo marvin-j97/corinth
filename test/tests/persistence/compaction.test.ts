@@ -10,6 +10,9 @@ import {
 import { queueUrl as getQueueUrl, createQueue, Message } from "../../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 import { existsSync, readFileSync } from "fs";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);

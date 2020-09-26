@@ -9,6 +9,7 @@ export const getUrl = (route: string) => IP + route;
 
 const logMessage = debug("corinth:test:message");
 const logError = debug("corinth:test:error");
+const corinthLog = debug("corinth");
 
 export function persistenceTeardown() {
   logMessage("Running test teardown");
@@ -43,8 +44,6 @@ function executableName(filename: string) {
   return filename + (platform() === "win32" ? ".exe" : "");
 }
 
-const corinthLog = debug("corinth");
-
 export function spawnCorinth() {
   const exeName = executableName("corinth");
   const path = `./target/debug/${exeName}`;
@@ -54,7 +53,7 @@ export function spawnCorinth() {
       CORINTH_PORT: PORT.toString(),
     },
   });
-  proc.stdout?.on("data", (msg) => {
+  proc.stderr?.on("data", (msg) => {
     corinthLog(msg.toString());
   });
   return proc;

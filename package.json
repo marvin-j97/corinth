@@ -26,5 +26,8 @@
       "ts-node/register",
       "tsconfig-paths/register"
     ]
+  },
+  "dependencies": {
+    "axios-retry": "^3.1.9"
   }
 }
