@@ -1,7 +1,12 @@
 import ava, { before, after } from "ava";
 import Axios from "axios";
 import { spawnCorinth, NO_FAIL, sleep, persistenceTeardown } from "../util";
-import { queueUrl as getQueueUrl, createQueue, Message } from "../common";
+import {
+  queueUrl as getQueueUrl,
+  createQueue,
+  Message,
+  MessageState,
+} from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
 
 before(persistenceTeardown);
@@ -12,6 +17,7 @@ spawnCorinth();
 const queueName = "new_queue";
 const queueUrl = getQueueUrl(queueName);
 const dequeueUrl = queueUrl + "/dequeue";
+const peekUrl = queueUrl + "/peek";
 const axiosConfig = {
   ...NO_FAIL(),
 };
@@ -208,5 +214,34 @@ ava.serial("1 item should be queued again", async (t) => {
         })
         .arbitrary()
     )(res).ok
+  );
+});
+
+ava.serial("Peek queue head -> item0, num_requeues: 1", async (t) => {
+  const res = await Axios.get(peekUrl, axiosConfig);
+  t.deepEqual(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().enum([200]),
+          data: yxc.object({
+            message: yxc.string().enum(["Message retrieved successfully"]),
+            status: yxc.number().enum([200]),
+            result: yxc.object({
+              item: Message(
+                yxc.object().arbitrary(),
+                yxc.number().use((i) => i === 1 || "Wrong requeue counter"),
+                yxc
+                  .string()
+                  .use(
+                    (s) => s === MessageState.Requeued || "Wrong message state"
+                  )
+              ),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res),
+    []
   );
 });
