@@ -15,7 +15,7 @@ const queueUrl = getQueueUrl(queueName);
 
 ava.serial("Create volatile queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -30,14 +30,13 @@ ava.serial("Create volatile queue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -64,8 +63,7 @@ ava.serial("Queue should be empty", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.is(existsSync(`.corinth/${queueName}/meta.json`), false);
   t.is(existsSync(`.corinth/${queueName}/items.jsonl`), false);

@@ -23,7 +23,7 @@ const axiosConfig = {
 
 ava.serial("Create queue", async (t) => {
   const res = await createQueue(queueName, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -38,8 +38,7 @@ ava.serial("Create queue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.is(existsSync(".corinth/queues/loadorder_test/meta.json"), true);
   t.is(existsSync(".corinth/queues/loadorder_test/items.jsonl"), false);
@@ -47,7 +46,7 @@ ava.serial("Create queue", async (t) => {
 
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -74,13 +73,12 @@ ava.serial("Queue should be empty", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("Enqueue bulk", async (t) => {
-  const res = await Axios.post(
+  await Axios.post(
     queueUrl + "/enqueue",
     {
       messages: [
@@ -135,7 +133,7 @@ ava.serial("Enqueue bulk", async (t) => {
 
 ava.serial(`7 items should be queued`, async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -162,9 +160,9 @@ ava.serial(`7 items should be queued`, async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
+
   const itemOrder = readFileSync(
     ".corinth/queues/loadorder_test/items.jsonl",
     "utf-8"
@@ -184,7 +182,7 @@ ava.serial(`7 items should be queued`, async (t) => {
 
 ava.serial("Dequeue 0 & 1", async (t) => {
   for (let i = 0; i < 2; i++) {
-    const res = await Axios.post(dequeueUrl, null, axiosConfig);
+    await Axios.post(dequeueUrl, null, axiosConfig);
   }
   t.is(
     JSON.parse(
@@ -196,7 +194,7 @@ ava.serial("Dequeue 0 & 1", async (t) => {
 
 ava.serial(`5 items should be queued`, async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -223,8 +221,7 @@ ava.serial(`5 items should be queued`, async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -248,7 +245,7 @@ ava.serial("Enqueue index=7", async (t) => {
 
 ava.serial(`6 items should be queued`, async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -275,8 +272,7 @@ ava.serial(`6 items should be queued`, async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -289,7 +285,7 @@ ava.serial("Stop exe", async (t) => {
 
 ava.serial("Queue should persist restart and be compacted", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -316,8 +312,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 
   const itemsInFile = readFileSync(

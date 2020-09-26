@@ -40,7 +40,7 @@ ava.serial("Enqueue item", async (t) => {
     },
     axiosConfig
   );
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -56,15 +56,14 @@ ava.serial("Enqueue item", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   messageId = res.data.result.items[0].id;
 });
 
 ava.serial("1 item should be queued", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -91,14 +90,13 @@ ava.serial("1 item should be queued", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -119,14 +117,13 @@ ava.serial("Dequeue queue head -> item0", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should be unacked", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -153,8 +150,7 @@ ava.serial("1 item should be unacked", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -164,7 +160,7 @@ ava.serial("Ack item", async (t) => {
     null,
     axiosConfig
   );
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -179,14 +175,13 @@ ava.serial("Ack item", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should be acked", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -213,8 +208,7 @@ ava.serial("1 item should be acked", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -224,7 +218,7 @@ ava.serial("Ack item again -> 404", async (t) => {
     null,
     axiosConfig
   );
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -236,14 +230,13 @@ ava.serial("Ack item again -> 404", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should still be acked", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -270,7 +263,6 @@ ava.serial("1 item should still be acked", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });

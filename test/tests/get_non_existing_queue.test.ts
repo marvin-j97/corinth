@@ -14,7 +14,7 @@ const queueUrl = getQueueUrl(queueName);
 
 ava.serial("Queue shouldn't exist", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -26,7 +26,6 @@ ava.serial("Queue shouldn't exist", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });

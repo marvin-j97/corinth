@@ -8,15 +8,18 @@ export const PORT = +(process.env.CORINTH_PORT || 6767);
 export const IP = `http://localhost:${PORT}`;
 export const getUrl = (route: string) => IP + route;
 
+const logMessage = debug("corinth:test:message");
+const logError = debug("corinth:test:error");
+
 export function persistenceTeardown() {
-  debug("test:message")("Running test teardown");
+  logMessage("Running test teardown");
 
   try {
     rmdirSync(".corinth", { recursive: true });
   } catch (error) {}
 
   if (existsSync(".corinth")) {
-    debug("test:error")("Test teardown failed");
+    logError("Test teardown failed");
     process.exit(1);
   }
 }
@@ -44,7 +47,7 @@ const corinthLog = debug("corinth");
 
 export function spawnCorinth() {
   const exeName = executableName("corinth");
-  const path = `../target/debug/${exeName}`;
+  const path = `./target/debug/${exeName}`;
   debug("test:message")(`Spawning ${path} with port ${PORT}`);
   const proc = execa(path, {
     env: {

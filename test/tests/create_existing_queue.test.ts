@@ -17,7 +17,7 @@ ava.serial("Create volatile queue", async (t) => {
 
 ava.serial("Create conflicting queue", async (t) => {
   const res = await createQueue(queueName, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -29,7 +29,6 @@ ava.serial("Create conflicting queue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });

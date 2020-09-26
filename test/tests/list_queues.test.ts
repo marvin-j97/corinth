@@ -15,7 +15,7 @@ ava.serial("List queues", async (t) => {
     await createQueue(name);
   }
   const res = await Axios.get(getUrl("/queues"), NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -32,8 +32,7 @@ ava.serial("List queues", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.deepEqual(res.data.result.queues.items, names.slice().sort());
 });

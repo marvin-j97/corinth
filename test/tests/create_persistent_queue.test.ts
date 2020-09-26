@@ -22,7 +22,7 @@ ava.serial("Create persistent queue", async (t) => {
       persistent: true,
     },
   });
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -37,14 +37,13 @@ ava.serial("Create persistent queue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("Queue should be empty", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -71,8 +70,7 @@ ava.serial("Queue should be empty", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.is(existsSync(`.corinth/queues/${queueName}/meta.json`), true);
   t.is(existsSync(`.corinth/queues/${queueName}/items.jsonl`), false);

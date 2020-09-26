@@ -32,7 +32,7 @@ ava.serial("Create missing queue on enqueue", async (t) => {
       persistent_queue: false,
     },
   });
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -48,14 +48,13 @@ ava.serial("Create missing queue on enqueue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should be queued", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -82,8 +81,7 @@ ava.serial("1 item should be queued", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -97,7 +95,7 @@ ava.serial(
         persistent_queue: false,
       },
     });
-    t.deepEqual(
+    t.assert(
       createExecutableSchema(
         yxc
           .object({
@@ -113,15 +111,14 @@ ava.serial(
             }),
           })
           .arbitrary()
-      )(res),
-      []
+      )(res).ok
     );
   }
 );
 
 ava.serial("2 items should be queued", async (t) => {
   const res = await Axios.get(queueUrl, NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -148,7 +145,6 @@ ava.serial("2 items should be queued", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });

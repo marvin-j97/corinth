@@ -28,7 +28,7 @@ ava.serial("Create volatile queue", async (t) => {
 
 ava.serial("Dequeue queue head -> empty queue", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -43,8 +43,7 @@ ava.serial("Dequeue queue head -> empty queue", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
@@ -65,7 +64,7 @@ ava.serial("Enqueue item", async (t) => {
     },
     axiosConfig
   );
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -81,14 +80,13 @@ ava.serial("Enqueue item", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should be queued", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -115,14 +113,13 @@ ava.serial("1 item should be queued", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("Dequeue queue head -> item0", async (t) => {
   const res = await Axios.post(dequeueUrl, null, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -143,14 +140,13 @@ ava.serial("Dequeue queue head -> item0", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
 
 ava.serial("1 item should be unacked", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -177,15 +173,14 @@ ava.serial("1 item should be unacked", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   await sleep(3000);
 });
 
 ava.serial("1 item should be queued again", async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -212,7 +207,6 @@ ava.serial("1 item should be queued again", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });

@@ -17,7 +17,7 @@ spawnCorinth();
 ava.serial("GET /", async (t) => {
   const res = await Axios.get(getUrl("/"), NO_FAIL());
   const gracePeriodSecs = 3;
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -41,8 +41,7 @@ ava.serial("GET /", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.is(res.data.result.info.uptime_secs * 1000, res.data.result.info.uptime_ms);
   const startedAt = unixToHammer(res.data.result.info.started_at);

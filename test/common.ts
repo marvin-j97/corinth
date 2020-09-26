@@ -1,14 +1,13 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
-import { ObjectHandler } from "@dotvirus/yxc/dist/handlers/object";
 
 enum MessageState {
   Pending = "Pending",
   Requeued = "Requeued",
 }
 
-export const Message = (item: ObjectHandler = yxc.object().arbitrary()) =>
+export const Message = (item = yxc.object().arbitrary()) =>
   yxc.object({
     id: yxc.string(),
     queued_at: yxc.number(),
