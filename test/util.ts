@@ -28,10 +28,11 @@ export function countSync<T>(
   pred: (item: T, index: number, arr: T[]) => boolean
 ) {
   let count = 0;
-  for (let i = 0; i < arr.length; i++) {
-    const item = arr[i];
-    if (pred(item, i, arr)) count++;
-  }
+  arr.forEach((item, i, arr) => {
+    if (pred(item, i, arr)) {
+      count++;
+    }
+  });
   return count;
 }
 
