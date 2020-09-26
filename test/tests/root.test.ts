@@ -8,6 +8,9 @@ import {
   persistenceTeardown,
 } from "../util";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);
@@ -17,18 +20,18 @@ spawnCorinth();
 ava.serial("GET /", async (t) => {
   const res = await Axios.get(getUrl("/"), NO_FAIL());
   const gracePeriodSecs = 3;
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Server info retrieved successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Server info retrieved successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               info: yxc.object({
-                name: yxc.string().enum(["Corinth"]),
-                version: yxc.string().enum(["0.0.1"]),
+                name: yxc.string().equals("Corinth"),
+                version: yxc.string().equals("0.0.1"),
                 uptime_secs: yxc.number().integer().min(0).max(gracePeriodSecs),
                 started_at: yxc.number().integer(),
                 uptime_ms: yxc
@@ -41,8 +44,7 @@ ava.serial("GET /", async (t) => {
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.is(res.data.result.info.uptime_secs * 1000, res.data.result.info.uptime_ms);
   const startedAt = unixToHammer(res.data.result.info.started_at);
