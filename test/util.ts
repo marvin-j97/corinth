@@ -1,7 +1,6 @@
 import execa from "execa";
 import { platform } from "os";
 import { rmdirSync, existsSync } from "fs";
-
 import debug from "debug";
 
 export const PORT = +(process.env.CORINTH_PORT || 6767);
