@@ -219,7 +219,7 @@ ava.serial("1 item should be queued again", async (t) => {
 
 ava.serial("Peek queue head -> item0, num_requeues: 1", async (t) => {
   const res = await Axios.get(peekUrl, axiosConfig);
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
@@ -230,18 +230,24 @@ ava.serial("Peek queue head -> item0, num_requeues: 1", async (t) => {
             result: yxc.object({
               item: Message(
                 yxc.object().arbitrary(),
-                yxc.number().use((i) => i === 1 || "Wrong requeue counter"),
-                yxc
-                  .string()
-                  .use(
-                    (s) => s === MessageState.Requeued || "Wrong message state"
-                  )
+                // TODO: fix with 2.0.1
+                <any>(
+                  yxc.number().use((i) => i === 1 || "Wrong requeue counter")
+                ),
+                // TODO: fix with 2.0.1
+                <any>(
+                  yxc
+                    .string()
+                    .use(
+                      (s) =>
+                        s === MessageState.Requeued || "Wrong message state"
+                    )
+                )
               ),
             }),
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
 });
