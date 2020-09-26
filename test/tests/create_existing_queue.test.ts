@@ -21,11 +21,11 @@ ava.serial("Create conflicting queue", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([409]),
+          status: yxc.number().equals(409),
           data: yxc.object({
             error: yxc.boolean().true(),
-            message: yxc.string().enum(["Queue already exists"]),
-            status: yxc.number().enum([409]),
+            message: yxc.string().equals("Queue already exists"),
+            status: yxc.number().equals(409),
           }),
         })
         .arbitrary()

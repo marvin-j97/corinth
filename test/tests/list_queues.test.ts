@@ -19,14 +19,14 @@ ava.serial("List queues", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Queue list retrieved successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Queue list retrieved successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               queues: yxc.object({
                 items: yxc.array(yxc.string()).len(names.length),
-                length: yxc.number().enum([names.length]),
+                length: yxc.number().equals(names.length),
               }),
             }),
           }),

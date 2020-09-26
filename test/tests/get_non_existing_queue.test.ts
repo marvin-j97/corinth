@@ -18,11 +18,11 @@ ava.serial("Queue shouldn't exist", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([404]),
+          status: yxc.number().equals(404),
           data: yxc.object({
-            status: yxc.number().enum([404]),
+            status: yxc.number().equals(404),
             error: yxc.boolean().true(),
-            message: yxc.string().enum(["Queue not found"]),
+            message: yxc.string().equals("Queue not found"),
           }),
         })
         .arbitrary()

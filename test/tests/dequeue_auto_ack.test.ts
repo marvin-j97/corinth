@@ -25,11 +25,11 @@ ava.serial("Dequeue queue head -> no queue", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([404]),
+          status: yxc.number().equals(404),
           data: yxc.object({
             error: yxc.boolean().true(),
-            message: yxc.string().enum(["Queue not found"]),
-            status: yxc.number().enum([404]),
+            message: yxc.string().equals("Queue not found"),
+            status: yxc.number().equals(404),
           }),
         })
         .arbitrary()
@@ -48,13 +48,13 @@ ava.serial("Dequeue queue head -> empty queue", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Request processed successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Request processed successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               items: yxc.array(Message()).len(0),
-              num_items: yxc.number().enum([0]),
+              num_items: yxc.number().equals(0),
             }),
           }),
         })
@@ -84,14 +84,14 @@ ava.serial("Enqueue item", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([202]),
+          status: yxc.number().equals(202),
           data: yxc.object({
-            message: yxc.string().enum(["Request processed successfully"]),
-            status: yxc.number().enum([202]),
+            message: yxc.string().equals("Request processed successfully"),
+            status: yxc.number().equals(202),
             result: yxc.object({
               items: yxc.array(Message()).len(1),
-              num_enqueued: yxc.number().enum([1]),
-              num_deduplicated: yxc.number().enum([0]),
+              num_enqueued: yxc.number().equals(1),
+              num_deduplicated: yxc.number().equals(0),
             }),
           }),
         })
@@ -106,22 +106,22 @@ ava.serial("1 item should be queued", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Queue info retrieved successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Queue info retrieved successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               queue: yxc.object({
-                name: yxc.string().enum([queueName]),
+                name: yxc.string().equals(queueName),
                 created_at: yxc.number().integer(),
-                size: yxc.number().enum([1]),
-                num_deduplicating: yxc.number().enum([0]),
-                num_unacknowledged: yxc.number().enum([0]),
-                num_deduplicated: yxc.number().enum([0]),
-                num_acknowledged: yxc.number().enum([0]),
-                num_requeued: yxc.number().enum([0]),
-                deduplication_time: yxc.number().enum([300]),
-                requeue_time: yxc.number().enum([300]),
+                size: yxc.number().equals(1),
+                num_deduplicating: yxc.number().equals(0),
+                num_unacknowledged: yxc.number().equals(0),
+                num_deduplicated: yxc.number().equals(0),
+                num_acknowledged: yxc.number().equals(0),
+                num_requeued: yxc.number().equals(0),
+                deduplication_time: yxc.number().equals(300),
+                requeue_time: yxc.number().equals(300),
                 persistent: yxc.boolean().false(),
                 memory_size: yxc.number(),
               }),
@@ -139,19 +139,19 @@ ava.serial("Dequeue queue head -> item0", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Request processed successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Request processed successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               items: yxc.array(
                 Message(
                   yxc.object({
-                    description: yxc.string().enum(["This is a test object!"]),
+                    description: yxc.string().equals("This is a test object!"),
                   })
                 )
               ),
-              num_items: yxc.number().enum([1]),
+              num_items: yxc.number().equals(1),
             }),
           }),
         })
@@ -166,22 +166,22 @@ ava.serial("Queue should be empty again", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Queue info retrieved successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Queue info retrieved successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               queue: yxc.object({
-                name: yxc.string().enum([queueName]),
+                name: yxc.string().equals(queueName),
                 created_at: yxc.number().integer(),
-                size: yxc.number().enum([0]),
-                num_deduplicating: yxc.number().enum([0]),
-                num_unacknowledged: yxc.number().enum([0]),
-                num_deduplicated: yxc.number().enum([0]),
-                num_acknowledged: yxc.number().enum([1]),
-                num_requeued: yxc.number().enum([0]),
-                deduplication_time: yxc.number().enum([300]),
-                requeue_time: yxc.number().enum([300]),
+                size: yxc.number().equals(0),
+                num_deduplicating: yxc.number().equals(0),
+                num_unacknowledged: yxc.number().equals(0),
+                num_deduplicated: yxc.number().equals(0),
+                num_acknowledged: yxc.number().equals(1),
+                num_requeued: yxc.number().equals(0),
+                deduplication_time: yxc.number().equals(300),
+                requeue_time: yxc.number().equals(300),
                 persistent: yxc.boolean().false(),
                 memory_size: yxc.number(),
               }),
@@ -199,13 +199,13 @@ ava.serial("Dequeue queue head -> empty queue again", async (t) => {
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Request processed successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Request processed successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               items: yxc.array(Message()).len(0),
-              num_items: yxc.number().enum([0]),
+              num_items: yxc.number().equals(0),
             }),
           }),
         })
