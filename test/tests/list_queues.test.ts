@@ -3,6 +3,9 @@ import Axios from "axios";
 import { getUrl, spawnCorinth, NO_FAIL, persistenceTeardown } from "../util";
 import { createQueue } from "../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 before(persistenceTeardown);
 after(persistenceTeardown);
@@ -15,25 +18,24 @@ ava.serial("List queues", async (t) => {
     await createQueue(name);
   }
   const res = await Axios.get(getUrl("/queues"), NO_FAIL());
-  t.deepEqual(
+  t.assert(
     createExecutableSchema(
       yxc
         .object({
-          status: yxc.number().enum([200]),
+          status: yxc.number().equals(200),
           data: yxc.object({
-            message: yxc.string().enum(["Queue list retrieved successfully"]),
-            status: yxc.number().enum([200]),
+            message: yxc.string().equals("Queue list retrieved successfully"),
+            status: yxc.number().equals(200),
             result: yxc.object({
               queues: yxc.object({
                 items: yxc.array(yxc.string()).len(names.length),
-                length: yxc.number().enum([names.length]),
+                length: yxc.number().equals(names.length),
               }),
             }),
           }),
         })
         .arbitrary()
-    )(res),
-    []
+    )(res).ok
   );
   t.deepEqual(res.data.result.queues.items, names.slice().sort());
 });

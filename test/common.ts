@@ -1,7 +1,9 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
-import { ObjectHandler } from "@dotvirus/yxc/dist/handlers/object";
+import axiosRetry from "axios-retry";
+
+axiosRetry(Axios, { retries: 3 });
 
 export enum MessageState {
   Pending = "Pending",
@@ -9,14 +11,14 @@ export enum MessageState {
 }
 
 export const Message = (
-  item: ObjectHandler = yxc.object().arbitrary(),
-  num_requeues = yxc.number().integer().min(0),
+  item = yxc.object().arbitrary(),
+  num_requeues = yxc.number().natural({ withZero: true }),
   state = yxc.string().enum(Object.values(MessageState))
 ) =>
   yxc.object({
     id: yxc.string(),
-    queued_at: yxc.number().integer().positive(),
-    updated_at: yxc.number().integer().positive(),
+    queued_at: yxc.number().natural(),
+    updated_at: yxc.number().natural(),
     item,
     state,
     num_requeues,
