@@ -169,7 +169,7 @@ pub fn create_server() -> Nickel {
 
   #[allow(unused_doc_comments)]
   /**
-   * @api {delete} /queue/:queue/purge Purge queue state
+   * @api {delete} /queue/:queue/purge Purge queue
    * @apiName PurgeQueue
    * @apiGroup Queue
    *
