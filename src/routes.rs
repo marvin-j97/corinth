@@ -355,7 +355,7 @@ pub fn create_queue_handler<'mw>(
     return res.send(format_success(
       StatusCode::Created,
       String::from("Queue created successfully"),
-      json!({ "queue_id": queue_name }),
+      json!(null),
     ));
   }
 }
