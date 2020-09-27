@@ -347,6 +347,42 @@ pub fn create_queue_handler<'mw>(
   }
 }
 
+pub fn compact_queue_handler<'mw>(
+  req: &mut Request,
+  mut res: Response<'mw>,
+) -> MiddlewareResult<'mw> {
+  if !queue_exists(req) {
+    res.set(MediaType::Json);
+    res.set(StatusCode::NotFound);
+    return res.send(format_error(
+      StatusCode::NotFound,
+      String::from("Queue not found"),
+    ));
+  } else {
+    let mut queue_map = QUEUES.lock().unwrap();
+
+    let queue_name = String::from(req.param("queue_name").unwrap());
+    let queue = queue_map.get_mut(&queue_name).unwrap();
+
+    if !queue.is_persistent() {
+      return res.send(format_error(
+        StatusCode::Forbidden,
+        String::from("Nothing to compact: queue is not persistent"),
+      ));
+    }
+
+    queue.compact();
+
+    res.set(MediaType::Json);
+    res.set(StatusCode::Ok);
+    return res.send(format_success(
+      StatusCode::Ok,
+      String::from("Queue compacted successfully"),
+      json!(null),
+    ));
+  }
+}
+
 pub fn purge_queue_handler<'mw>(
   req: &mut Request,
   mut res: Response<'mw>,

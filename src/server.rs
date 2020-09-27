@@ -156,6 +156,16 @@ pub fn create_server() -> Nickel {
 
   #[allow(unused_doc_comments)]
   /**
+   * @api {delete} /queue/:queue/compact Compact queue file
+   * @apiName CompactQueue
+   * @apiGroup Queue
+   *
+   * @apiError 404 Queue not found
+   */
+  server.post("/queue/:queue_name/compact", routes::compact_queue_handler);
+
+  #[allow(unused_doc_comments)]
+  /**
    * @api {delete} /queue/:queue/purge Purge queue state
    * @apiName PurgeQueue
    * @apiGroup Queue

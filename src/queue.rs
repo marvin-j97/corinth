@@ -139,6 +139,12 @@ impl Queue {
       + self.dedup_size() * size_of::<String>()
   }
 
+  pub fn compact(&mut self) {
+    let id = &self.id;
+    let queue_item_file = queue_item_file(&id, String::from(""));
+    compact_file(&queue_temp_file(id), &queue_item_file, &self.items);
+  }
+
   // Read queue from disk
   pub fn from_disk(id: String) -> Queue {
     let items: VecDeque<Message> = init_items(&id);
