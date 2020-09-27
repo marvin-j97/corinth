@@ -43,8 +43,8 @@ ava.serial("Create queue", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.is(existsSync(".corinth/queues/loadorder_test/meta.json"), true);
-  t.is(existsSync(".corinth/queues/loadorder_test/items.jsonl"), false);
+  t.assert(existsSync(".corinth/queues/loadorder_test/meta.json"));
+  t.assert(!existsSync(".corinth/queues/loadorder_test/items.jsonl"));
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -387,7 +387,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
     itemsInFile.every((item) => item["$corinth_deleted"] === undefined),
     true
   );
-  t.is(existsSync(".corinth/queues/loadorder_test/items~.jsonl"), false);
+  t.assert(!existsSync(".corinth/queues/loadorder_test/items~.jsonl"));
 
   const itemOrder = itemsInFile.map((msg) => msg.item.index);
 

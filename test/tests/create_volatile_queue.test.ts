@@ -68,6 +68,6 @@ ava.serial("Queue should be empty", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.is(existsSync(`.corinth/${queueName}/meta.json`), false);
-  t.is(existsSync(`.corinth/${queueName}/items.jsonl`), false);
+  t.assert(!existsSync(`.corinth/${queueName}/meta.json`));
+  t.assert(!existsSync(`.corinth/${queueName}/items.jsonl`));
 });

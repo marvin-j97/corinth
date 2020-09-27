@@ -38,7 +38,7 @@ ava.serial("Create queue", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.is(existsSync(".corinth/queues/delete_non_persistent"), false);
+  t.assert(!existsSync(".corinth/queues/delete_non_persistent"));
 });
 
 const NUM_ITEMS = 10;
@@ -84,7 +84,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       )(res).ok
     );
   }
-  t.is(existsSync(".corinth/queues/delete_non_persistent"), false);
+  t.assert(!existsSync(".corinth/queues/delete_non_persistent"));
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
@@ -155,5 +155,5 @@ ava.serial("Queue -> 404", async (t) => {
     )(res).ok
   );
 
-  t.is(existsSync(".corinth/queues/delete_non_persistent"), false);
+  t.assert(!existsSync(".corinth/queues/delete_non_persistent"));
 });

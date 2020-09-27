@@ -41,8 +41,8 @@ ava.serial("Create queue", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.is(existsSync(".corinth/queues/purge/meta.json"), true);
-  t.is(existsSync(".corinth/queues/purge/items.jsonl"), false);
+  t.assert(existsSync(".corinth/queues/purge/meta.json"));
+  t.assert(!existsSync(".corinth/queues/purge/items.jsonl"));
 });
 
 const NUM_ITEMS = 10;
@@ -88,7 +88,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       )(res).ok
     );
   }
-  t.is(existsSync(".corinth/queues/purge/items.jsonl"), true);
+  t.assert(existsSync(".corinth/queues/purge/items.jsonl"));
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
@@ -174,6 +174,6 @@ ava.serial("Queue should be empty", async (t) => {
     )(res).ok
   );
 
-  t.is(existsSync(".corinth/queues/purge/meta.json"), true);
-  t.is(existsSync(".corinth/queues/purge/items.jsonl"), false);
+  t.assert(existsSync(".corinth/queues/purge/meta.json"));
+  t.assert(!existsSync(".corinth/queues/purge/items.jsonl"));
 });

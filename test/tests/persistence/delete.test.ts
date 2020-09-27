@@ -41,8 +41,8 @@ ava.serial("Create queue", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.is(existsSync(".corinth/queues/delete/meta.json"), true);
-  t.is(existsSync(".corinth/queues/delete/items.jsonl"), false);
+  t.assert(existsSync(".corinth/queues/delete/meta.json"));
+  t.assert(!existsSync(".corinth/queues/delete/items.jsonl"));
 });
 
 const NUM_ITEMS = 10;
@@ -88,7 +88,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       )(res).ok
     );
   }
-  t.is(existsSync(".corinth/queues/delete/items.jsonl"), true);
+  t.assert(existsSync(".corinth/queues/delete/items.jsonl"));
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
@@ -159,5 +159,5 @@ ava.serial("Queue -> 404", async (t) => {
     )(res).ok
   );
 
-  t.is(existsSync(".corinth/queues/delete"), false);
+  t.assert(!existsSync(".corinth/queues/delete"));
 });
