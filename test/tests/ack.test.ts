@@ -171,10 +171,7 @@ ava.serial("Ack item", async (t) => {
           data: yxc.object({
             message: yxc.string().equals("Message reception acknowledged"),
             status: yxc.number().equals(200),
-            result: yxc
-              .object()
-              .nullable()
-              .use((v) => v === null),
+            result: yxc.null(),
           }),
         })
         .arbitrary()

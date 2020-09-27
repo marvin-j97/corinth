@@ -51,10 +51,7 @@ ava.serial("Peek queue head -> empty queue", async (t) => {
             message: yxc.string().equals("Queue is empty"),
             status: yxc.number().equals(200),
             result: yxc.object({
-              item: yxc
-                .object()
-                .nullable()
-                .use((v) => v === null),
+              item: yxc.null(),
             }),
           }),
         })

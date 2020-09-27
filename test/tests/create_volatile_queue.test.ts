@@ -26,10 +26,7 @@ ava.serial("Create volatile queue", async (t) => {
           data: yxc.object({
             message: yxc.string().equals("Queue created successfully"),
             status: yxc.number().equals(201),
-            result: yxc
-              .any()
-              .nullable()
-              .use((v) => v === null),
+            result: yxc.null(),
           }),
         })
         .arbitrary()
