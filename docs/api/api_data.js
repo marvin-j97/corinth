@@ -443,7 +443,7 @@ define({ "api": [
   {
     "type": "delete",
     "url": "/queue/:queue/purge",
-    "title": "Purge queue state",
+    "title": "Purge queue",
     "name": "PurgeQueue",
     "group": "Queue",
     "error": {
