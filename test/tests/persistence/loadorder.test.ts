@@ -183,6 +183,62 @@ ava.serial(`7 items should be queued`, async (t) => {
   t.is(itemOrder[itemOrder.length - 1], itemOrder.length - 1);
 });
 
+ava.serial("Reload", async (t) => {
+  corinth.kill();
+  corinth = spawnCorinth();
+  await sleep(1000);
+  t.pass();
+});
+
+ava.serial(`7 items should still be queued after reload`, async (t) => {
+  const res = await Axios.get(queueUrl, axiosConfig);
+  t.assert(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().equals(200),
+          data: yxc.object({
+            message: yxc.string().equals("Queue info retrieved successfully"),
+            status: yxc.number().equals(200),
+            result: yxc.object({
+              queue: yxc.object({
+                name: yxc.string().equals(queueName),
+                created_at: yxc.number().integer(),
+                size: yxc.number().equals(7),
+                num_deduplicating: yxc.number().equals(0),
+                num_unacknowledged: yxc.number().equals(0),
+                num_deduplicated: yxc.number().equals(0),
+                num_acknowledged: yxc.number().equals(0),
+                num_requeued: yxc.number().equals(0),
+                deduplication_time: yxc.number().equals(300),
+                requeue_time: yxc.number().equals(300),
+                persistent: yxc.boolean().true(),
+                memory_size: yxc.number(),
+              }),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res).ok
+  );
+
+  const itemOrder = readFileSync(
+    ".corinth/queues/loadorder_test/items.jsonl",
+    "utf-8"
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map((msg) => msg.item.index);
+
+  t.deepEqual(
+    itemOrder,
+    itemOrder.slice().sort((a, b) => a - b)
+  );
+  t.is(itemOrder[0], 0);
+  t.is(itemOrder[itemOrder.length - 1], itemOrder.length - 1);
+});
+
 ava.serial("Dequeue 0 & 1", async (t) => {
   for (let i = 0; i < 2; i++) {
     await Axios.post(dequeueUrl, null, axiosConfig);
@@ -229,7 +285,7 @@ ava.serial(`5 items should be queued`, async (t) => {
 });
 
 ava.serial("Enqueue index=7", async (t) => {
-  const res = await Axios.post(
+  await Axios.post(
     queueUrl + "/enqueue",
     {
       messages: [
