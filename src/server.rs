@@ -5,7 +5,10 @@ use crate::routes;
 use nickel::status::StatusCode;
 use nickel::{HttpRouter, MediaType, Nickel};
 use serde_json::json;
-use std::time::Instant;
+use std::{
+  thread,
+  time::{Duration, Instant},
+};
 
 pub fn create_server() -> Nickel {
   let mut server = Nickel::new();
@@ -19,7 +22,7 @@ pub fn create_server() -> Nickel {
   /**
    * @api {get} / Get server info
    * @apiName RootInfo
-   * @apiGroup Misc
+   * @apiGroup Server
    *
    * @apiSuccess {String} result:info:name Server name
    * @apiSuccess {String} result:info:version Server version
@@ -183,6 +186,25 @@ pub fn create_server() -> Nickel {
    * @apiError 404 Queue not found
    */
   server.delete("/queue/:queue_name", routes::delete_queue_handler);
+
+  #[allow(unused_doc_comments)]
+  /**
+   * @api {post} /close Shuts down server
+   * @apiName ShutdownServer
+   * @apiGroup Server
+   */
+  server.post(
+    "/close",
+    middleware! { |_req, res|
+      thread::spawn(move || {
+        eprintln!("Shutting down in 3 seconds...");
+        thread::sleep(Duration::from_secs(3));
+        eprintln!("Shutting down.");
+        std::process::exit(0);
+      });
+      format_success( StatusCode::Ok,String::from("Server shuts down in 3 seconds"), json!(null))
+    },
+  );
 
   server
 }
