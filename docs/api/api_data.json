@@ -73,6 +73,28 @@
     "groupTitle": "Queue"
   },
   {
+    "type": "delete",
+    "url": "/queue/:queue/compact",
+    "title": "Compact queue file",
+    "name": "CompactQueue",
+    "group": "Queue",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "404",
+            "description": "<p>Queue not found</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "src/server.rs",
+    "groupTitle": "Queue"
+  },
+  {
     "type": "put",
     "url": "/queue/:queue",
     "title": "Create queue",
