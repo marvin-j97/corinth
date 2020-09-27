@@ -44,13 +44,13 @@ function executableName(filename: string) {
   return filename + (platform() === "win32" ? ".exe" : "");
 }
 
-export function spawnCorinth() {
+export function spawnCorinth(port = PORT) {
   const exeName = executableName("corinth");
   const path = `./target/debug/${exeName}`;
-  debug("test:message")(`Spawning ${path} with port ${PORT}`);
+  debug("test:message")(`Spawning ${path} with port ${port}`);
   const proc = execa(path, {
     env: {
-      CORINTH_PORT: PORT.toString(),
+      CORINTH_PORT: port.toString(),
     },
   });
   proc.stderr?.on("data", (msg) => {
