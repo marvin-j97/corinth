@@ -1,56 +1,5 @@
 define({ "api": [
   {
-    "type": "get",
-    "url": "/",
-    "title": "Get server info",
-    "name": "RootInfo",
-    "group": "Misc",
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "result:info:name",
-            "description": "<p>Server name</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "result:info:version",
-            "description": "<p>Server version</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:uptime_ms",
-            "description": "<p>Uptime in milliseconds</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:uptime_secs",
-            "description": "<p>Uptime in seconds</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:started_at",
-            "description": "<p>Unix timestamp when the server was started</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "src/server.rs",
-    "groupTitle": "Misc"
-  },
-  {
     "type": "post",
     "url": "/queue/:queue/:message/ack",
     "title": "Acknowledge message reception",
@@ -512,5 +461,66 @@ define({ "api": [
     "version": "0.0.0",
     "filename": "src/server.rs",
     "groupTitle": "Queue"
+  },
+  {
+    "type": "get",
+    "url": "/",
+    "title": "Get server info",
+    "name": "RootInfo",
+    "group": "Server",
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "result:info:name",
+            "description": "<p>Server name</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "result:info:version",
+            "description": "<p>Server version</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:info:uptime_ms",
+            "description": "<p>Uptime in milliseconds</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:info:uptime_secs",
+            "description": "<p>Uptime in seconds</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:info:started_at",
+            "description": "<p>Unix timestamp when the server was started</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "src/server.rs",
+    "groupTitle": "Server"
+  },
+  {
+    "type": "post",
+    "url": "/close",
+    "title": "Shuts down server",
+    "name": "ShutdownServer",
+    "group": "Server",
+    "version": "0.0.0",
+    "filename": "src/server.rs",
+    "groupTitle": "Server"
   }
 ] });
