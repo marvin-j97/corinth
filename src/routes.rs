@@ -147,6 +147,12 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
   }
   if all_objects && body.messages.len() < 256 {
     let queue_name = String::from(req.param("queue_name").unwrap());
+    if queue_name.is_empty() {
+      return res.send(format_error(
+        StatusCode::BadRequest,
+        String::from("Invalid queue name"),
+      ));
+    }
 
     if !queue_exists(req) {
       let query = req.query();
@@ -312,6 +318,13 @@ pub fn create_queue_handler<'mw>(
     ));
   } else {
     let queue_name = String::from(req.param("queue_name").unwrap());
+    if queue_name.is_empty() {
+      return res.send(format_error(
+        StatusCode::BadRequest,
+        String::from("Invalid queue name"),
+      ));
+    }
+
     let query = req.query();
     let requeue_time_str = query.get("requeue_time").unwrap_or("300");
     let deduplication_time_str = query.get("deduplication_time").unwrap_or("300");
@@ -335,14 +348,14 @@ pub fn create_queue_handler<'mw>(
       deduplication_time_result.unwrap(),
       persistent,
     );
-    queue_map.insert(queue_name, queue);
+    queue_map.insert(queue_name.clone(), queue);
 
     res.set(MediaType::Json);
     res.set(StatusCode::Created);
     return res.send(format_success(
       StatusCode::Created,
       String::from("Queue created successfully"),
-      json!(null),
+      json!({ "queue_id": queue_name }),
     ));
   }
 }
