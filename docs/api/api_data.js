@@ -189,6 +189,54 @@ define({ "api": [
     "groupTitle": "Queue"
   },
   {
+    "type": "put",
+    "url": "/queue/:queue",
+    "title": "Edit queue",
+    "name": "EditQueue",
+    "group": "Queue",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "body:requeue_time",
+            "description": "<p>(Optional) Ack time in seconds</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "body:deduplication_time",
+            "description": "<p>(Optional) Deduplication time in seconds</p>"
+          }
+        ]
+      }
+    },
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "400",
+            "description": "<p>Invalid input</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "404",
+            "description": "<p>Queue not found</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "src/server.rs",
+    "groupTitle": "Queue"
+  },
+  {
     "type": "post",
     "url": "/queue/:queue/enqueue",
     "title": "Enqueue message(s)",
