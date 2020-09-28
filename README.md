@@ -3,10 +3,13 @@
 # Corinth
 
 A portable Rust message queue server with file system persistence (AOF .jsonl format) and a simple Json REST API.
+Other notable features include explicit message acknowledgment and message deduplication.
 
 ### Run
 
-Grab a pre-compiled binary, and run:
+Grab a pre-compiled binary (https://github.com/dotvirus/corinth/releases).
+If you're using an OS other than Windows, Linux, Mac you'll have to [build a binary yourself](#build-from-source).
+Run:
 
 ```
 (Unix)
@@ -31,13 +34,13 @@ See https://dotvirus.github.io/corinth/api/.
 
 ### Getting started
 
-Create a queue named 'my-queue'
+Create a queue named 'my-queue'. Queues are persistent by default.
 
 ```
 curl -X PUT http://localhost:44444/queue/my-queue
 ```
 
-Enqueue an item to queue
+Enqueue an item to queue ('item' can be any JSON object)
 
 ```
 curl -X POST http://localhost:44444/queue/my-queue/enqueue -H "Content-Type: application/json" --data "{ \"messages\": [{ \"item\": { \"name\": \"My item\" }, \"deduplication\": null }] }"
@@ -49,7 +52,13 @@ Dequeue item from queue
 curl -X POST http://localhost:44444/queue/my-queue/dequeue
 ```
 
-Acknowledge message reception
+By default, messages need to be acknowledged, otherwise they will be requeued after a specific timeout. If you don't care about acknowledging, you can acknowledge on dequeuing instead:
+
+```
+curl -X POST http://localhost:44444/queue/my-queue/dequeue?ack=true
+```
+
+Acknowledge message reception 
 
 ```
 curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
