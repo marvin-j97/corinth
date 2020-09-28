@@ -173,7 +173,7 @@ pub fn create_server() -> Nickel {
 
   #[allow(unused_doc_comments)]
   /**
-   * @api {delete} /queue/:queue/compact Compact queue file
+   * @api {post} /queue/:queue/compact Compact queue file
    * @apiName CompactQueue
    * @apiGroup Queue
    *
