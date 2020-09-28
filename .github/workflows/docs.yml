@@ -3,7 +3,9 @@
 
 name: Build API docs
 
-on: push
+on: 
+  push:
+    branches: [dev]
 
 jobs:
   build:
