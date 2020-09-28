@@ -9,6 +9,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, remove_file, rename, File};
 use std::io::{BufRead, BufReader, Write};
 use std::mem::size_of;
+use std::path::Path;
 use std::thread;
 use std::time::Duration;
 
@@ -434,7 +435,9 @@ impl Queue {
         remove_dir_all(folder).expect("Failed to delete queue folder");
       } else {
         let item_file = queue_item_file(&self.id, String::from(""));
-        remove_file(item_file).expect("Failed to delete item file");
+        if Path::new(&item_file).exists() {
+          remove_file(item_file).expect("Failed to delete item file");
+        }
         write_metadata(&self.id, &self.meta);
       }
     }
