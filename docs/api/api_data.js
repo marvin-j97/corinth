@@ -22,7 +22,7 @@ define({ "api": [
     "groupTitle": "Queue"
   },
   {
-    "type": "delete",
+    "type": "post",
     "url": "/queue/:queue/compact",
     "title": "Compact queue file",
     "name": "CompactQueue",

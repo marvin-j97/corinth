@@ -1,14 +1,14 @@
 {
   "name": "Corinth",
   "version": "0.0.1",
-  "description": "Corinth",
+  "description": "A portable Rust message queue",
   "title": "Corinth API docs",
   "sampleUrl": false,
   "defaultVersion": "0.0.0",
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "2020-09-28T13:34:05.206Z",
+    "time": "2020-09-28T14:10:29.566Z",
     "url": "https://apidocjs.com",
     "version": "0.25.0"
   }
