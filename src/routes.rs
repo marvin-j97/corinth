@@ -1,5 +1,6 @@
 use crate::date::iso_date;
 use crate::global_data::{queue_exists, QUEUES};
+use crate::queue::unwrap_message;
 use crate::queue::Message;
 use crate::queue::Queue;
 use crate::response::{format_error, format_success};
@@ -51,7 +52,7 @@ pub fn peek_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middlewar
         StatusCode::Ok,
         String::from("Message retrieved successfully"),
         json!({
-          "item": message.unwrap()
+          "item": unwrap_message(message.unwrap())
         }),
       ));
     } else {
@@ -110,14 +111,16 @@ pub fn dequeue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
         }
       }
 
+      let unwrapped_vec: Vec<Value> = dequeued_items.into_iter().map(unwrap_message).collect();
+
       res.set(MediaType::Json);
       res.set(StatusCode::Ok);
       return res.send(format_success(
         StatusCode::Ok,
         String::from("Request processed successfully"),
         json!({
-          "items": dequeued_items,
-          "num_items": dequeued_items.len(),
+          "items": unwrapped_vec,
+          "num_items": unwrapped_vec.len(),
         }),
       ));
     }
@@ -193,6 +196,7 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
         num_deduplicated += 1;
       }
     }
+    let unwrapped_vec: Vec<Value> = enqueued_items.into_iter().map(unwrap_message).collect();
 
     res.set(MediaType::Json);
     res.set(StatusCode::Accepted);
@@ -200,9 +204,9 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
       StatusCode::Accepted,
       String::from("Request processed successfully"),
       json!({
-        "num_enqueued": enqueued_items.len(),
+        "num_enqueued": unwrapped_vec.len(),
         "num_deduplicated": num_deduplicated,
-        "items": enqueued_items
+        "items": unwrapped_vec
       }),
     ));
   } else {
@@ -248,6 +252,23 @@ pub fn ack_message<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middleware
   }
 }
 
+fn format_queue_info(queue: &Queue) -> Value {
+  json!({
+    "name": queue.get_name(),
+    "created_at": queue.created_at(),
+    "size": queue.size(),
+    "num_deduplicating": queue.dedup_size(),
+    "num_unacknowledged": queue.ack_size(),
+    "num_acknowledged": queue.num_acknowledged(),
+    "num_deduplicated": queue.num_deduplicated(),
+    "deduplication_time": queue.deduplication_time(),
+    "requeue_time": queue.requeue_time(),
+    "persistent": queue.is_persistent(),
+    "memory_size": queue.get_memory_size(),
+    "num_requeued": queue.num_requeued(),
+  })
+}
+
 pub fn queue_info<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareResult<'mw> {
   if queue_exists(req) {
     let queue_name = String::from(req.param("queue_name").unwrap());
@@ -259,22 +280,7 @@ pub fn queue_info<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareR
     return res.send(format_success(
       StatusCode::Ok,
       String::from("Queue info retrieved successfully"),
-      json!({
-        "queue": {
-          "name": queue_name,
-          "created_at": queue.created_at(),
-          "size": queue.size(),
-          "num_deduplicating": queue.dedup_size(),
-          "num_unacknowledged": queue.ack_size(),
-          "num_acknowledged": queue.num_acknowledged(),
-          "num_deduplicated": queue.num_deduplicated(),
-          "deduplication_time": queue.deduplication_time(),
-          "requeue_time": queue.requeue_time(),
-          "persistent": queue.is_persistent(),
-          "memory_size": queue.get_memory_size(),
-          "num_requeued": queue.num_requeued(),
-        }
-      }),
+      json!({ "queue": format_queue_info(queue) }),
     ));
   } else {
     res.set(MediaType::Json);
@@ -288,8 +294,7 @@ pub fn queue_info<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareR
 
 pub fn list_queues<'mw>(_req: &mut Request, mut res: Response<'mw>) -> MiddlewareResult<'mw> {
   let queue_map = QUEUES.lock().unwrap();
-  let mut queue_names: Vec<String> = queue_map.keys().map(|key| key.clone()).collect();
-  queue_names.sort();
+  let queue_info: Vec<Value> = queue_map.values().map(format_queue_info).collect();
 
   res.set(MediaType::Json);
   res.set(StatusCode::Ok);
@@ -298,8 +303,8 @@ pub fn list_queues<'mw>(_req: &mut Request, mut res: Response<'mw>) -> Middlewar
     String::from("Queue list retrieved successfully"),
     json!({
       "queues": {
-        "items": queue_names,
-        "length": queue_names.len(),
+        "items": queue_info,
+        "length": queue_info.len(),
       }
     }),
   ));

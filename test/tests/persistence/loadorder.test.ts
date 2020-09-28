@@ -170,7 +170,7 @@ ava.serial(`7 items should be queued`, async (t) => {
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line))
-    .map((msg) => msg.item.index);
+    .map((msg) => JSON.parse(msg.item).index);
 
   t.deepEqual(
     itemOrder,
@@ -226,7 +226,7 @@ ava.serial(`7 items should still be queued after reload`, async (t) => {
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line))
-    .map((msg) => msg.item.index);
+    .map((msg) => JSON.parse(msg.item).index);
 
   t.deepEqual(
     itemOrder,
@@ -386,7 +386,7 @@ ava.serial("Queue should persist restart and be compacted", async (t) => {
   );
   t.assert(!existsSync(".corinth/queues/loadorder_test/items~.jsonl"));
 
-  const itemOrder = itemsInFile.map((msg) => msg.item.index);
+  const itemOrder = itemsInFile.map((msg) => JSON.parse(msg.item).index);
 
   t.deepEqual(
     itemOrder,

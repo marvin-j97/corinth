@@ -3,6 +3,7 @@ use crate::env::data_folder;
 use crate::fs::{append_to_file, file_exists};
 use crate::global_data::QUEUES;
 use oysterpack_uid::ulid::ulid_str;
+use serde_json::json;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, remove_file, rename, File};
@@ -17,12 +18,26 @@ enum MessageState {
   Requeued,
 }
 
+type StringifiedJson = String;
+
+pub fn unwrap_message(msg: Message) -> Value {
+  let content: Value = serde_json::from_str(&msg.item).unwrap();
+  json!({
+    "id": msg.id,
+    "queued_at": msg.queued_at,
+    "updated_at": msg.updated_at,
+    "item": content,
+    "state": msg.state,
+    "num_requeues": msg.num_requeues,
+  })
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message {
   id: String,
   queued_at: u64,
   updated_at: u64,
-  item: Value,
+  item: StringifiedJson,
   state: MessageState,
   num_requeues: u16,
 }
@@ -267,7 +282,7 @@ impl Queue {
     let now = timestamp();
     let message = Message {
       id: id.clone(),
-      item,
+      item: serde_json::to_string(&item).unwrap(),
       queued_at: now,
       updated_at: now,
       state: MessageState::Pending,
@@ -391,6 +406,10 @@ impl Queue {
 
   pub fn num_requeued(&self) -> u64 {
     self.meta.num_requeued
+  }
+
+  pub fn get_name(&self) -> String {
+    self.id.clone()
   }
 
   pub fn purge(&mut self, delete: bool) {

@@ -18,6 +18,22 @@ ava.serial("List queues", async (t) => {
     await createQueue(name);
   }
   const res = await Axios.get(getUrl("/queues"), NO_FAIL());
+
+  const emptyQueueInfo = yxc.object({
+    name: yxc.string(),
+    created_at: yxc.number().integer(),
+    size: yxc.number().equals(0),
+    num_deduplicating: yxc.number().equals(0),
+    num_unacknowledged: yxc.number().equals(0),
+    num_deduplicated: yxc.number().equals(0),
+    num_acknowledged: yxc.number().equals(0),
+    num_requeued: yxc.number().equals(0),
+    deduplication_time: yxc.number().equals(300),
+    requeue_time: yxc.number().equals(300),
+    persistent: yxc.boolean().false(),
+    memory_size: yxc.number(),
+  });
+
   t.assert(
     createExecutableSchema(
       yxc
@@ -28,7 +44,7 @@ ava.serial("List queues", async (t) => {
             status: yxc.number().equals(200),
             result: yxc.object({
               queues: yxc.object({
-                items: yxc.array(yxc.string()).len(names.length),
+                items: yxc.array(emptyQueueInfo).len(names.length),
                 length: yxc.number().equals(names.length),
               }),
             }),
@@ -37,5 +53,8 @@ ava.serial("List queues", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.deepEqual(res.data.result.queues.items, names.slice().sort());
+  t.deepEqual(
+    res.data.result.queues.items.map((q: { name: string }) => q.name).sort(),
+    names.slice().sort()
+  );
 });
