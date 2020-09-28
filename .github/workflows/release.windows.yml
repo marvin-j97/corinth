@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: "14"
       - run: npm ci
-      - run: node version ${{ github.event.release.tag_name }}
+      - run: ts-node version ${{ github.event.release.tag_name }}
       - name: Build
         run: cargo build --release
       - name: Rename
