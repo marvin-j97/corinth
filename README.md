@@ -3,11 +3,13 @@
 # Corinth
 
 A portable Rust message queue server with file system persistence (AOF .jsonl format) and a simple Json REST API.
+
 Other notable features include explicit message acknowledgment and message deduplication.
 
 ### Run
 
 Grab a pre-compiled binary (https://github.com/dotvirus/corinth/releases).
+
 If you're using an OS other than Windows, Linux, Mac you'll have to [build a binary yourself](#build-from-source).
 Run:
 
@@ -21,6 +23,7 @@ corinth-[version].exe
 ```
 
 That's it. By default the server runs on port 44444.
+
 By using environment variables, you can change some settings:
 
 | Name                | Description                            | Default    |
