@@ -22,6 +22,12 @@ struct EnqueueBody {
   messages: Vec<NewItem>,
 }
 
+#[derive(Serialize, Deserialize)]
+struct QueuePatchBody {
+  requeue_time: Option<u32>,
+  deduplication_time: Option<u32>,
+}
+
 pub fn logger<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
   eprintln!(
     "{} {}: {}",
@@ -132,6 +138,53 @@ pub fn dequeue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
       String::from("Queue not found"),
     ));
   }
+}
+
+pub fn patch_queue_handler<'mw>(
+  req: &mut Request,
+  mut res: Response<'mw>,
+) -> MiddlewareResult<'mw> {
+  let body = try_with!(res, {
+    req
+      .json_as::<QueuePatchBody>()
+      .map_err(|e| (StatusCode::BadRequest, e))
+  });
+
+  let queue_name = String::from(req.param("queue_name").unwrap());
+  if queue_name.is_empty() {
+    return res.send(format_error(
+      StatusCode::BadRequest,
+      String::from("Invalid queue name"),
+    ));
+  }
+
+  if !queue_exists(req) {
+    res.set(MediaType::Json);
+    res.set(StatusCode::NotFound);
+    return res.send(format_error(
+      StatusCode::NotFound,
+      String::from("Queue not found"),
+    ));
+  }
+
+  let mut queue_map = QUEUES.lock().unwrap();
+  let queue = queue_map.get_mut(&queue_name).unwrap();
+
+  if body.deduplication_time.is_some() {
+    queue.set_deduplication_time(body.deduplication_time.unwrap());
+  }
+
+  if body.requeue_time.is_some() {
+    queue.set_requeue_time(body.requeue_time.unwrap());
+  }
+
+  res.set(MediaType::Json);
+  res.set(StatusCode::Ok);
+  return res.send(format_success(
+    StatusCode::Ok,
+    String::from("Queue edited successfully"),
+    json!(null),
+  ));
 }
 
 pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareResult<'mw> {

@@ -159,6 +159,20 @@ pub fn create_server() -> Nickel {
 
   #[allow(unused_doc_comments)]
   /**
+   * @api {put} /queue/:queue Edit queue
+   * @apiName EditQueue
+   * @apiGroup Queue
+   *
+   * @apiParam {String} body:requeue_time (Optional) Ack time in seconds
+   * @apiParam {String} body:deduplication_time (Optional) Deduplication time in seconds
+   *
+   * @apiError 400 Invalid input
+   * @apiError 404 Queue not found
+   */
+  server.patch("/queue/:queue_name", routes::patch_queue_handler);
+
+  #[allow(unused_doc_comments)]
+  /**
    * @api {delete} /queue/:queue/compact Compact queue file
    * @apiName CompactQueue
    * @apiGroup Queue

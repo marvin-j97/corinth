@@ -392,6 +392,14 @@ impl Queue {
     self.ack_map.len()
   }
 
+  pub fn set_deduplication_time(&mut self, time: u32) {
+    self.meta.deduplication_time = time;
+  }
+
+  pub fn set_requeue_time(&mut self, time: u32) {
+    self.meta.requeue_time = time;
+  }
+
   pub fn deduplication_time(&self) -> u32 {
     self.meta.deduplication_time
   }
