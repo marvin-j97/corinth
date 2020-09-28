@@ -323,7 +323,9 @@ pub fn create_queue_handler<'mw>(
     ));
   } else {
     let queue_name = String::from(req.param("queue_name").unwrap());
-    if queue_name.is_empty() {
+    if queue_name.is_empty() || queue_name.len() > 64 {
+      res.set(MediaType::Json);
+      res.set(StatusCode::BadRequest);
       return res.send(format_error(
         StatusCode::BadRequest,
         String::from("Invalid queue name"),
