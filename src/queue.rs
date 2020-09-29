@@ -432,7 +432,9 @@ impl Queue {
     if self.persistent {
       if delete {
         let folder = get_queue_folder(&self.id);
-        remove_dir_all(folder).expect("Failed to delete queue folder");
+        if Path::new(&folder).exists() {
+          remove_dir_all(folder).expect("Failed to delete queue folder");
+        }
       } else {
         let item_file = queue_item_file(&self.id, String::from(""));
         if Path::new(&item_file).exists() {

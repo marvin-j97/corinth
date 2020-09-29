@@ -31,7 +31,7 @@ ava.serial("GET /", async (t) => {
             result: yxc.object({
               info: yxc.object({
                 name: yxc.string().equals("Corinth"),
-                version: yxc.string().equals("0.1.1"),
+                version: yxc.string().equals("0.1.2"),
                 uptime_secs: yxc.number().integer().min(0).max(gracePeriodSecs),
                 started_at: yxc.number().integer(),
                 uptime_ms: yxc
