@@ -65,20 +65,28 @@ pub struct Queue {
   persistent: bool,
 }
 
+fn path_to_string(path: std::path::PathBuf) -> String {
+  path.into_os_string().into_string().expect("Path error")
+}
+
 // Returns the relative folder path in which
 // the queue is stored (items & metadata)
 pub fn get_queue_folder(id: &String) -> String {
-  format!("{}/queues/{}", data_folder(), id)
+  let path = Path::new(&data_folder()).join("queues").join(&id);
+  path_to_string(path)
 }
 
 pub fn queue_meta_file(id: &String) -> String {
-  format!("{}/meta.json", get_queue_folder(&id))
+  let path = Path::new(&get_queue_folder(id)).join("meta.json");
+  path_to_string(path)
 }
 
 // Returns the relative path to the persistent storage file
 // of the queue's items
 fn queue_item_file(id: &String, suffix: String) -> String {
-  format!("{}/items{}.jsonl", get_queue_folder(&id), suffix)
+  let filename = format!("items{}.jsonl", suffix);
+  let path = Path::new(&get_queue_folder(id)).join(filename);
+  path_to_string(path)
 }
 
 // Temp file to write into
