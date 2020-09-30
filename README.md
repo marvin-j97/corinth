@@ -2,9 +2,11 @@
 
 # Corinth
 
-A portable Rust message queue server with file system persistence (AOF .jsonl format) and a simple JSON REST API.
+A portable message queue server with file system persistence (AOF .jsonl format) and an easy-to-use JSON REST API.
 
 Other notable features include explicit message acknowledgment and message deduplication.
+
+Written in stable, safe Rust, tested in Typescript.
 
 ### Run
 
