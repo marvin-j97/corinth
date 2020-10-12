@@ -164,6 +164,9 @@ impl Queue {
   }
 
   pub fn start_compact_interval(&mut self, ms: u64) {
+    if !self.is_persistent() {
+      return;
+    }
     eprintln!("Starting compaction timer for {}", self.get_name());
     let this_id = self.id.clone();
     thread::spawn(move || loop {
