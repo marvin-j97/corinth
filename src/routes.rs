@@ -187,6 +187,18 @@ pub fn patch_queue_handler<'mw>(
   ));
 }
 
+fn are_all_objects(vec: &Vec<NewItem>) -> bool {
+  let mut all_objects = true;
+
+  for item in vec.iter() {
+    if !item.item.is_object() {
+      all_objects = false;
+    }
+  }
+
+  all_objects
+}
+
 pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> MiddlewareResult<'mw> {
   let body = try_with!(res, {
     req
@@ -194,14 +206,7 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
       .map_err(|e| (StatusCode::BadRequest, e))
   });
 
-  let mut all_objects = true;
-
-  for item in body.messages.iter() {
-    if !item.item.is_object() {
-      all_objects = false;
-    }
-  }
-  if all_objects && body.messages.len() < 256 {
+  if body.messages.len() < 256 && are_all_objects(&body.messages) {
     let queue_name = String::from(req.param("queue_name").unwrap());
     if queue_name.is_empty() {
       return res.send(format_error(
@@ -216,7 +221,8 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
       if create_queue.is_some() && create_queue.unwrap_or("false") == "true" {
         let persistent = query.get("persistent_queue").unwrap_or("true") == "true";
         let mut queue_map = QUEUES.lock().unwrap();
-        let queue = Queue::new(queue_name.clone(), 300, 300, persistent);
+        let mut queue = Queue::new(queue_name.clone(), 300, 300, persistent);
+        queue.start_compact_interval(86400);
         queue_map.insert(queue_name.clone(), queue);
       } else {
         res.set(MediaType::Json);
@@ -267,7 +273,7 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
     res.set(StatusCode::BadRequest);
     return res.send(format_error(
       StatusCode::BadRequest,
-      String::from("body.items is required to be of type Array<Object> with at most 255 items"),
+      String::from("body.items is required to be of type Array<{ item: String, deduplication_id: String? }> with at most 255 items"),
     ));
   }
 }

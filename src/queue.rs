@@ -163,6 +163,23 @@ impl Queue {
       + self.dedup_size() * size_of::<String>()
   }
 
+  pub fn start_compact_interval(&mut self, ms: u64) {
+    eprintln!("Starting compaction timer for {}", self.get_name());
+    let this_id = self.id.clone();
+    thread::spawn(move || loop {
+      thread::sleep(Duration::from_secs(ms));
+      let mut queue_map = QUEUES.lock().unwrap();
+      let this_queue = queue_map.get_mut(&this_id);
+      if this_queue.is_some() {
+        let queue = this_queue.unwrap();
+        eprintln!("Compacting {}", queue.id);
+        queue.compact();
+      } else {
+        break;
+      }
+    });
+  }
+
   pub fn compact(&mut self) {
     let id = &self.id;
     let queue_item_file = queue_item_file(&id, String::from(""));
@@ -197,7 +214,6 @@ impl Queue {
   // Create a new empty queue
   pub fn new(id: String, requeue_time: u32, deduplication_time: u32, persistent: bool) -> Queue {
     let items: VecDeque<Message> = VecDeque::new();
-    // TODO: compact interval
     let meta = QueueMeta {
       num_requeued: 0,
       num_deduplicated: 0,
