@@ -103,15 +103,13 @@ docker run -d -it -p 127.0.0.1:8080:22222 --env CORINTH_PORT=22222 --rm --name c
 
 ### Docker Persistence
 
-To create a persistent queue within Docker you need to mount a volume.
+To create a persistent queue within Docker you need to mount a volume and make sure to correctly set the CORINTH_BASE_FOLDER environment variable.
 
 ```
 docker run -d -it --env CORINTH_BASE_FOLDER=/corinth/.corinth -p 127.0.0.1:8080:44444 --mount source=corinthvol,target=/corinth --rm --name corinth-queue corinth
 ```
 
-Pay attention to the `--mount` command.
-
-This will create a volume and mount it to your Docker container. Corinth will manage its persistence in the given base folder (CORINTH_BASE_FOLDER).
+Pay attention to the `--mount` command. This will create a volume and mount it to your Docker container as '/corinth'. In this example, Corinth will store its persistence in the .corinth folder (/corinth/.corinth).
 
 You can inspect the volume details using
 
