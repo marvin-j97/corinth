@@ -111,7 +111,9 @@ docker run -d -it --env CORINTH_BASE_FOLDER=/corinth/.corinth -p 127.0.0.1:8080:
 
 Pay attention to the `--mount` command.
 
-This will create a volume and mount it to your Docker container. You can inspect the volume details using
+This will create a volume and mount it to your Docker container. Corinth will manage its persistence in the given base folder (CORINTH_BASE_FOLDER).
+
+You can inspect the volume details using
 
 ```
 docker volume inspect corinthvol
