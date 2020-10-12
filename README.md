@@ -8,7 +8,7 @@ Other notable features include explicit message acknowledgment and message dedup
 
 Written in stable, safe Rust, tested in Typescript.
 
-### Run
+## Run
 
 Grab a pre-compiled binary (https://github.com/dotvirus/corinth/releases).
 
@@ -33,11 +33,11 @@ By using environment variables, you can change some settings:
 | CORINTH_PORT        | Port the server runs on                | 44444      |
 | CORINTH_BASE_FOLDER | Folder where persistent data is stored | ./.corinth |
 
-### API Documentation
+## API Documentation
 
 See https://dotvirus.github.io/corinth/api/.
 
-### Getting started
+## Getting started
 
 Create a queue named 'my-queue'. Queues are persistent by default.
 
@@ -69,13 +69,13 @@ Acknowledge message reception
 curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
 ```
 
-### Build from source
+## Build from source
 
 ```
 cargo build --release
 ```
 
-### Docker
+## Docker
 
 Build the image
 
@@ -93,7 +93,25 @@ docker run -d -it -p 127.0.0.1:8080:44444 --rm --name corinth-queue corinth
 
 To verify if everything worked, open up a browser and enter `localhost:8080`
 
-### Roadmap
+### Docker Persistance
+
+To create a persistant queue within Docker you need to mount a volume.
+
+```
+docker run -d -it --env CORINTH_PORT=22222 --env CORINTH_BASE_FOLDER=/app -p 127.0.0.1:8080:22222 --mount source=corinthvol,target=/app --rm --name queue-server corinth
+```
+
+Pay attention to the `--mount` command.
+
+This will create a volume and mount it to your Docker container. You can inspect the volume details using
+
+```
+docker volume inspect corinthvol
+```
+
+For more details on Docker volumes, check out the [official docs here](https://docs.docker.com/storage/volumes/#start-a-container-with-a-volume).
+
+## Roadmap
 
 - See GitHub issues (https://github.com/dotvirus/corinth/issues)
 - Node.js API wrapper package
