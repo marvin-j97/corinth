@@ -63,7 +63,7 @@ By default, messages need to be acknowledged, otherwise they will be requeued af
 curl -X POST http://localhost:44444/queue/my-queue/dequeue?ack=true
 ```
 
-Acknowledge message reception 
+Acknowledge message reception
 
 ```
 curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
@@ -74,6 +74,24 @@ curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
 ```
 cargo build --release
 ```
+
+### Docker
+
+Build the image
+
+```
+docker build -t corinth .
+```
+
+Where `corinth` is the name of the image you are about to create.
+
+Running a new container using the image
+
+```
+docker run -d -it -p 127.0.0.1:8080:44444 --rm --name corinth-queue corinth
+```
+
+To verify if everything worked, open up a browser and enter `localhost:8080`
 
 ### Roadmap
 
