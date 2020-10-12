@@ -93,12 +93,20 @@ docker run -d -it -p 127.0.0.1:8080:44444 --rm --name corinth-queue corinth
 
 To verify if everything worked, open up a browser and enter `localhost:8080`
 
-### Docker Persistance
+### Change application port
 
-To create a persistant queue within Docker you need to mount a volume.
+Use the CORINTH_PORT variable to change the port Corinth will bind to.
 
 ```
-docker run -d -it --env CORINTH_PORT=22222 --env CORINTH_BASE_FOLDER=/app -p 127.0.0.1:8080:22222 --mount source=corinthvol,target=/app --rm --name queue-server corinth
+docker run -d -it -p 127.0.0.1:8080:22222 --env CORINTH_PORT=22222 --rm --name corinth-queue corinth
+```
+
+### Docker Persistence
+
+To create a persistent queue within Docker you need to mount a volume.
+
+```
+docker run -d -it --env CORINTH_BASE_FOLDER=/corinth/.corinth -p 127.0.0.1:8080:44444 --mount source=corinthvol,target=/corinth --rm --name corinth-queue corinth
 ```
 
 Pay attention to the `--mount` command.
