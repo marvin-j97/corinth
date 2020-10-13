@@ -28,10 +28,11 @@ That's it. By default the server runs on port 44444.
 
 By using environment variables, you can change some settings:
 
-| Name                | Description                            | Default    |
-| ------------------- | -------------------------------------- | ---------- |
-| CORINTH_PORT        | Port the server runs on                | 44444      |
-| CORINTH_BASE_FOLDER | Folder where persistent data is stored | ./.corinth |
+| Name                     | Description                            | Default    |
+| ------------------------ | -------------------------------------- | ---------- |
+| CORINTH_PORT             | Port the server runs on                | 44444      |
+| CORINTH_BASE_FOLDER      | Folder where persistent data is stored | ./.corinth |
+| CORINTH_COMPACT_INTERVAL | Compaction interval (in seconds)       | 86400      |
 
 ### API Documentation
 
@@ -63,7 +64,7 @@ By default, messages need to be acknowledged, otherwise they will be requeued af
 curl -X POST http://localhost:44444/queue/my-queue/dequeue?ack=true
 ```
 
-Acknowledge message reception 
+Acknowledge message reception
 
 ```
 curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack

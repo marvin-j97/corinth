@@ -1,3 +1,4 @@
+use crate::env::get_compaction_interval;
 use crate::fs::create_queues_folder;
 use crate::fs::file_exists;
 use crate::queue::{queue_meta_file, Queue};
@@ -31,8 +32,9 @@ pub fn read_queues_from_disk() {
     let queue_name = file.file_name().into_string().unwrap();
     if metadata(file.path()).unwrap().is_dir() {
       if file_exists(&queue_meta_file(&queue_name)) {
-        let queue = Queue::from_disk(queue_name.clone());
+        let mut queue = Queue::from_disk(queue_name.clone());
         eprintln!("Read queue '{}' from disk", queue_name);
+        queue.start_compact_interval(get_compaction_interval().into());
         queue_map.insert(queue_name, queue);
       } else {
         eprintln!("Metadata file not found, skipping...")

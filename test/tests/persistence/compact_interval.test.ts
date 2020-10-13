@@ -3,13 +3,13 @@ import Axios from "axios";
 import {
   spawnCorinth,
   NO_FAIL,
+  countSync,
   sleep,
   persistenceTeardown,
-  getUrl,
 } from "../../util";
 import { queueUrl as getQueueUrl, createQueue, Message } from "../../common";
 import yxc, { createExecutableSchema } from "@dotvirus/yxc";
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import axiosRetry from "axios-retry";
 
 axiosRetry(Axios, { retries: 3 });
@@ -17,14 +17,16 @@ axiosRetry(Axios, { retries: 3 });
 before(persistenceTeardown);
 after(persistenceTeardown);
 
-let corinth = spawnCorinth();
+let corinth = spawnCorinth(undefined, 4);
 
-const queueName = "storeload";
+const queueName = "compaction_test";
 const queueUrl = getQueueUrl(queueName);
+const dequeueUrl = queueUrl + "/dequeue";
 const axiosConfig = {
   ...NO_FAIL(),
   params: {
     persistent: true,
+    ack: true,
   },
 };
 
@@ -44,8 +46,8 @@ ava.serial("Create queue", async (t) => {
         .arbitrary()
     )(res).ok
   );
-  t.assert(existsSync(".corinth/queues/storeload/meta.json"));
-  t.assert(!existsSync(".corinth/queues/storeload/items.jsonl"));
+  t.assert(existsSync(".corinth/queues/compaction_test/meta.json"));
+  t.assert(!existsSync(".corinth/queues/compaction_test/items.jsonl"));
 });
 
 ava.serial("Queue should be empty", async (t) => {
@@ -124,7 +126,7 @@ ava.serial(`Enqueue ${NUM_ITEMS} items`, async (t) => {
       )(res).ok
     );
   }
-  t.assert(existsSync(".corinth/queues/storeload/items.jsonl"));
+  t.assert(existsSync(".corinth/queues/compaction_test/items.jsonl"));
 });
 
 ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
@@ -160,15 +162,14 @@ ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
   );
 });
 
-ava.serial("Stop exe", async (t) => {
-  await Axios.post(getUrl("/close"));
-  await sleep(3500);
-  corinth = spawnCorinth();
-  await sleep(1000);
+ava.serial("Dequeue some items", async (t) => {
+  for (let i = 0; i < 2; i++) {
+    const res = await Axios.post(dequeueUrl, null, axiosConfig);
+  }
   t.pass();
 });
 
-ava.serial("Queue should persist restart", async (t) => {
+ava.serial(`${NUM_ITEMS - 2} items should be queued`, async (t) => {
   const res = await Axios.get(queueUrl, axiosConfig);
   t.assert(
     createExecutableSchema(
@@ -182,11 +183,11 @@ ava.serial("Queue should persist restart", async (t) => {
               queue: yxc.object({
                 name: yxc.string().equals(queueName),
                 created_at: yxc.number().integer(),
-                size: yxc.number().equals(NUM_ITEMS),
+                size: yxc.number().equals(NUM_ITEMS - 2),
                 num_deduplicating: yxc.number().equals(0),
                 num_unacknowledged: yxc.number().equals(0),
                 num_deduplicated: yxc.number().equals(0),
-                num_acknowledged: yxc.number().equals(0),
+                num_acknowledged: yxc.number().equals(2),
                 num_requeued: yxc.number().equals(0),
                 deduplication_time: yxc.number().equals(300),
                 requeue_time: yxc.number().equals(300),
@@ -199,4 +200,81 @@ ava.serial("Queue should persist restart", async (t) => {
         .arbitrary()
     )(res).ok
   );
+
+  t.is(
+    JSON.parse(
+      readFileSync(".corinth/queues/compaction_test/meta.json", "utf-8")
+    ).num_acknowledged,
+    2
+  );
+
+  const itemsInFile = readFileSync(
+    ".corinth/queues/compaction_test/items.jsonl",
+    "utf-8"
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+
+  t.is(itemsInFile.length, NUM_ITEMS + 2);
+  t.is(
+    countSync(
+      itemsInFile,
+      (item) => typeof item["$corinth_deleted"] === "string"
+    ),
+    2
+  );
+});
+
+ava.serial("Wait for compaction interval", async (t) => {
+  await sleep(5000);
+  t.pass();
+});
+
+ava.serial("Queue should persist restart and be compacted", async (t) => {
+  const res = await Axios.get(queueUrl, axiosConfig);
+  t.assert(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().equals(200),
+          data: yxc.object({
+            message: yxc.string().equals("Queue info retrieved successfully"),
+            status: yxc.number().equals(200),
+            result: yxc.object({
+              queue: yxc.object({
+                name: yxc.string().equals(queueName),
+                created_at: yxc.number().integer(),
+                size: yxc.number().equals(NUM_ITEMS - 2),
+                num_deduplicating: yxc.number().equals(0),
+                num_unacknowledged: yxc.number().equals(0),
+                num_deduplicated: yxc.number().equals(0),
+                num_acknowledged: yxc.number().equals(2),
+                num_requeued: yxc.number().equals(0),
+                deduplication_time: yxc.number().equals(300),
+                requeue_time: yxc.number().equals(300),
+                persistent: yxc.boolean().true(),
+                memory_size: yxc.number(),
+              }),
+            }),
+          }),
+        })
+        .arbitrary()
+    )(res).ok
+  );
+
+  const itemsInFile = readFileSync(
+    ".corinth/queues/compaction_test/items.jsonl",
+    "utf-8"
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+
+  t.is(itemsInFile.length, NUM_ITEMS - 2);
+  t.is(
+    itemsInFile.every((item) => item["$corinth_deleted"] === undefined),
+    true
+  );
+  t.assert(!existsSync(".corinth/queues/compaction_test/items~.jsonl"));
 });
