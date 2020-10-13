@@ -100,15 +100,12 @@ pub fn create_server() -> Nickel {
    * @apiGroup Queue
    *
    * @apiParam {Array} body:messages List of messages: { item: Object, deduplication: Nullable<String> }
-   * @apiParam {String} query:create_queue (Optional) Set to "true" to create queue if not found
-   * @apiParam {String} query:persistent_queue (Optional) Set to "true" to make created queue persistent
    *
    * @apiSuccess {Number} result:num_enqueued Amount of enqueued messages
    * @apiSuccess {Number} result:num_deduplicated Amount of deduplicated messages
    * @apiSuccess {Array} result:items Created messages
    *
-   * @apiError 400 Bad Request (malformed body)
-   * @apiError 400 body.items is required to be of type Array<Object>
+   * @apiError 400 Bad Request
    * @apiError 404 Queue not found
    */
   server.post("/queue/:queue_name/enqueue", routes::enqueue_handler);

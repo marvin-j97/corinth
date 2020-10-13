@@ -217,22 +217,12 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
     }
 
     if !queue_exists(req) {
-      let query = req.query();
-      let create_queue = query.get("create_queue");
-      if create_queue.is_some() && create_queue.unwrap_or("false") == "true" {
-        let persistent = query.get("persistent_queue").unwrap_or("true") == "true";
-        let mut queue_map = QUEUES.lock().unwrap();
-        let mut queue = Queue::new(queue_name.clone(), 300, 300, persistent);
-        queue.start_compact_interval(get_compaction_interval().into());
-        queue_map.insert(queue_name.clone(), queue);
-      } else {
-        res.set(MediaType::Json);
-        res.set(StatusCode::NotFound);
-        return res.send(format_error(
-          StatusCode::NotFound,
-          String::from("Queue not found"),
-        ));
-      }
+      res.set(MediaType::Json);
+      res.set(StatusCode::NotFound);
+      return res.send(format_error(
+        StatusCode::NotFound,
+        String::from("Queue not found"),
+      ));
     }
 
     let mut queue_map = QUEUES.lock().unwrap();
