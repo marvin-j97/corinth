@@ -163,14 +163,18 @@ impl Queue {
       + self.dedup_size() * size_of::<String>()
   }
 
-  pub fn start_compact_interval(&mut self, ms: u64) {
-    if !self.is_persistent() {
+  pub fn start_compact_interval(&mut self, secs: u64) {
+    if !self.is_persistent() || secs == 0 {
       return;
     }
-    eprintln!("Starting compaction timer for {}", self.get_name());
+    eprintln!(
+      "Starting compaction timer for {} ({} millis)",
+      self.get_name(),
+      secs
+    );
     let this_id = self.id.clone();
     thread::spawn(move || loop {
-      thread::sleep(Duration::from_secs(ms));
+      thread::sleep(Duration::from_secs(secs));
       let mut queue_map = QUEUES.lock().unwrap();
       let this_queue = queue_map.get_mut(&this_id);
       if this_queue.is_some() {

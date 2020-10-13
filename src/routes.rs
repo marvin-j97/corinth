@@ -1,4 +1,5 @@
 use crate::date::iso_date;
+use crate::env::get_compaction_interval;
 use crate::global_data::{queue_exists, QUEUES};
 use crate::queue::unwrap_message;
 use crate::queue::Message;
@@ -222,7 +223,7 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
         let persistent = query.get("persistent_queue").unwrap_or("true") == "true";
         let mut queue_map = QUEUES.lock().unwrap();
         let mut queue = Queue::new(queue_name.clone(), 300, 300, persistent);
-        queue.start_compact_interval(86400);
+        queue.start_compact_interval(get_compaction_interval().into());
         queue_map.insert(queue_name.clone(), queue);
       } else {
         res.set(MediaType::Json);
@@ -408,12 +409,13 @@ pub fn create_queue_handler<'mw>(
     }
 
     let mut queue_map = QUEUES.lock().unwrap();
-    let queue = Queue::new(
+    let mut queue = Queue::new(
       queue_name.clone(),
       requeue_time_result.unwrap(),
       deduplication_time_result.unwrap(),
       persistent,
     );
+    queue.start_compact_interval(get_compaction_interval().into());
     queue_map.insert(queue_name.clone(), queue);
 
     res.set(MediaType::Json);

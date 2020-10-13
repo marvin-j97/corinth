@@ -23,6 +23,15 @@ pub fn get_port() -> u16 {
   }
 }
 
+pub fn get_compaction_interval() -> u32 {
+  let num = try_env_to_uint(String::from("CORINTH_COMPACT_INTERVAL"));
+  if num.is_some() {
+    num.unwrap().try_into().expect("Invalid port value")
+  } else {
+    86400
+  }
+}
+
 pub fn data_folder() -> String {
   env::var("CORINTH_BASE_FOLDER").unwrap_or(String::from(".corinth"))
 }
