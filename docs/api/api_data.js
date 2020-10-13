@@ -251,20 +251,6 @@ define({ "api": [
             "optional": false,
             "field": "body:messages",
             "description": "<p>List of messages: { item: Object, deduplication: Nullable<String> }</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "query:create_queue",
-            "description": "<p>(Optional) Set to &quot;true&quot; to create queue if not found</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "query:persistent_queue",
-            "description": "<p>(Optional) Set to &quot;true&quot; to make created queue persistent</p>"
           }
         ]
       }
@@ -303,7 +289,7 @@ define({ "api": [
             "group": "Error 4xx",
             "optional": false,
             "field": "400",
-            "description": "<p>Bad Request (malformed body)</p>"
+            "description": "<p>Bad Request</p>"
           },
           {
             "group": "Error 4xx",
