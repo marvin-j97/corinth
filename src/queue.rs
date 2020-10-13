@@ -157,6 +157,10 @@ fn write_metadata(id: &String, meta: &QueueMeta) {
 }
 
 impl Queue {
+  pub fn write_metadata(&self) {
+    write_metadata(&self.id, &self.meta)
+  }
+
   pub fn get_memory_size(&self) -> usize {
     size_of::<Queue>()
       + self.size() * size_of::<Message>()
@@ -261,7 +265,7 @@ impl Queue {
       self.ack_map.remove(&id);
       self.meta.num_acknowledged += 1;
       if self.persistent {
-        write_metadata(&self.id, &self.meta);
+        self.write_metadata();
       }
       true
     } else {
@@ -292,7 +296,7 @@ impl Queue {
       if dedup_in_map {
         self.meta.num_deduplicated += 1;
         if self.persistent {
-          write_metadata(&self.id, &self.meta);
+          self.write_metadata();
         }
         return false;
       }
@@ -389,7 +393,7 @@ impl Queue {
       if auto_ack {
         self.meta.num_acknowledged += 1;
         if self.persistent {
-          write_metadata(&self.id, &self.meta);
+          self.write_metadata();
         }
       } else {
         let message = item_maybe.clone().unwrap();
@@ -446,6 +450,10 @@ impl Queue {
     self.ack_map.len()
   }
 
+  pub fn set_max_length(&mut self, max: u64) {
+    self.meta.max_length = max;
+  }
+
   pub fn set_deduplication_time(&mut self, time: u32) {
     self.meta.deduplication_time = time;
   }
@@ -493,7 +501,7 @@ impl Queue {
         if Path::new(&item_file).exists() {
           remove_file(item_file).expect("Failed to delete item file");
         }
-        write_metadata(&self.id, &self.meta);
+        self.write_metadata();
       }
     }
   }

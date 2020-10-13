@@ -163,6 +163,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiParam {String} body:requeue_time (Optional) Ack time in seconds
    * @apiParam {String} body:deduplication_time (Optional) Deduplication time in seconds
+   * @apiParam {String} body:max_length (Optional) Queue max length
    *
    * @apiError 400 Invalid input
    * @apiError 404 Queue not found

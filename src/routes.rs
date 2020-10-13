@@ -27,6 +27,7 @@ struct EnqueueBody {
 struct QueuePatchBody {
   requeue_time: Option<u32>,
   deduplication_time: Option<u32>,
+  max_length: Option<u64>,
 }
 
 pub fn logger<'mw>(req: &mut Request, res: Response<'mw>) -> MiddlewareResult<'mw> {
@@ -177,6 +178,14 @@ pub fn patch_queue_handler<'mw>(
 
   if body.requeue_time.is_some() {
     queue.set_requeue_time(body.requeue_time.unwrap());
+  }
+
+  if body.max_length.is_some() {
+    queue.set_max_length(body.max_length.unwrap());
+  }
+
+  if queue.is_persistent() {
+    queue.write_metadata();
   }
 
   res.set(MediaType::Json);
