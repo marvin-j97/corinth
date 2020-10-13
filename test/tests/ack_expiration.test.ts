@@ -233,19 +233,8 @@ ava.serial("Peek queue head -> item0, num_requeues: 1", async (t) => {
             result: yxc.object({
               item: Message(
                 yxc.object().arbitrary(),
-                // TODO: fix with 2.0.1
-                <any>(
-                  yxc.number().use((i) => i === 1 || "Wrong requeue counter")
-                ),
-                // TODO: fix with 2.0.1
-                <any>(
-                  yxc
-                    .string()
-                    .use(
-                      (s) =>
-                        s === MessageState.Requeued || "Wrong message state"
-                    )
-                )
+                yxc.number().eq(1),
+                yxc.string().eq(MessageState.Requeued)
               ),
             }),
           }),
