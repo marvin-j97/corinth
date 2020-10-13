@@ -24,6 +24,6 @@ fn main() {
 
   read_queues_from_disk();
   create_server()
-    .listen(format!("127.0.0.1:{}", get_port()))
+    .listen(format!("0.0.0.0:{}", get_port()))
     .expect("Fatal error");
 }

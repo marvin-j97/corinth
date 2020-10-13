@@ -8,7 +8,7 @@ Other notable features include explicit message acknowledgment and message dedup
 
 Written in stable, safe Rust, tested in Typescript.
 
-### Run
+## Run
 
 Grab a pre-compiled binary (https://github.com/dotvirus/corinth/releases).
 
@@ -34,11 +34,11 @@ By using environment variables, you can change some settings:
 | CORINTH_BASE_FOLDER      | Folder where persistent data is stored | ./.corinth |
 | CORINTH_COMPACT_INTERVAL | Compaction interval (in seconds)       | 86400      |
 
-### API Documentation
+## API Documentation
 
 See https://dotvirus.github.io/corinth/api/.
 
-### Getting started
+## Getting started
 
 Create a queue named 'my-queue'. Queues are persistent by default.
 
@@ -70,13 +70,57 @@ Acknowledge message reception
 curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
 ```
 
-### Build from source
+## Build from source
 
 ```
 cargo build --release
 ```
 
-### Roadmap
+## Docker
+
+Build the image
+
+```
+docker build -t corinth .
+```
+
+Where `corinth` is the name of the image you are about to create.
+
+Running a new container using the image
+
+```
+docker run -d -it -p 127.0.0.1:8080:44444 --rm --name corinth-queue corinth
+```
+
+To verify if everything worked, open up a browser and enter `localhost:8080`
+
+### Change application port
+
+Use the CORINTH_PORT variable to change the port Corinth will bind to.
+
+```
+docker run -d -it -p 127.0.0.1:8080:22222 --env CORINTH_PORT=22222 --rm --name corinth-queue corinth
+```
+
+### Docker Persistence
+
+To create a persistent queue within Docker you need to mount a volume and make sure to correctly set the CORINTH_BASE_FOLDER environment variable.
+
+```
+docker run -d -it --env CORINTH_BASE_FOLDER=/corinth/.corinth -p 127.0.0.1:8080:44444 --mount source=corinthvol,target=/corinth --rm --name corinth-queue corinth
+```
+
+Pay attention to the `--mount` command. This will create a volume and mount it to your Docker container as '/corinth'. In this example, Corinth will store its persistence in the .corinth folder (/corinth/.corinth).
+
+You can inspect the volume details using
+
+```
+docker volume inspect corinthvol
+```
+
+For more details on Docker volumes, check out the [official docs here](https://docs.docker.com/storage/volumes/#start-a-container-with-a-volume).
+
+## Roadmap
 
 - See GitHub issues (https://github.com/dotvirus/corinth/issues)
 - Node.js API wrapper package
