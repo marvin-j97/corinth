@@ -40,7 +40,7 @@ pub fn create_server() -> Nickel {
       format_success( StatusCode::Ok,String::from("Server info retrieved successfully"), json!({
         "info": {
           "name": String::from("Corinth"),
-          "version": String::from("0.2.0"),
+          "version": String::from("0.3.0"),
           "uptime_ms": uptime_secs * 1000,
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
@@ -148,6 +148,7 @@ pub fn create_server() -> Nickel {
    * @apiParam {String} query:requeue_time (Optional) Ack time in seconds
    * @apiParam {String} query:deduplication_time (Optional) Deduplication time in seconds
    * @apiParam {String} query:persistent (Optional) Set to "true" to make queue persistent
+   * @apiParam {String} query:max_length (Optional) Queue max length
    *
    * @apiError 400 Invalid time argument
    * @apiError 409 Queue already exists

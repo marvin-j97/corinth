@@ -228,6 +228,15 @@ pub fn enqueue_handler<'mw>(req: &mut Request, mut res: Response<'mw>) -> Middle
     let mut queue_map = QUEUES.lock().unwrap();
     let queue = queue_map.get_mut(&queue_name).unwrap();
 
+    if !queue.can_fit_messages(body.messages.len() as u64) {
+      res.set(MediaType::Json);
+      res.set(StatusCode::Forbidden);
+      return res.send(format_error(
+        StatusCode::Forbidden,
+        String::from("Queue is full"),
+      ));
+    }
+
     let mut enqueued_items: Vec<Message> = Vec::new();
     let mut num_deduplicated = 0;
 
@@ -385,8 +394,12 @@ pub fn create_queue_handler<'mw>(
     let query = req.query();
     let requeue_time_str = query.get("requeue_time").unwrap_or("300");
     let deduplication_time_str = query.get("deduplication_time").unwrap_or("300");
+    let max_length_str = query.get("max_length").unwrap_or("0");
+
     let requeue_time_result = requeue_time_str.parse::<u32>().ok();
     let deduplication_time_result = deduplication_time_str.parse::<u32>().ok();
+    let max_length_result = max_length_str.parse::<u64>().ok();
+
     let persistent = query.get("persistent").unwrap_or("true") == "true";
 
     if requeue_time_result.is_none() || deduplication_time_result.is_none() {
@@ -404,6 +417,7 @@ pub fn create_queue_handler<'mw>(
       requeue_time_result.unwrap(),
       deduplication_time_result.unwrap(),
       persistent,
+      max_length_result.unwrap(),
     );
     queue.start_compact_interval(get_compaction_interval().into());
     queue_map.insert(queue_name.clone(), queue);

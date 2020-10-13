@@ -51,6 +51,7 @@ pub struct QueueMeta {
   num_requeued: u64,
   requeue_time: u32,
   deduplication_time: u32,
+  max_length: u64,
 }
 
 pub struct Queue {
@@ -208,6 +209,7 @@ impl Queue {
         created_at: timestamp(),
         requeue_time: 300,
         deduplication_time: 300,
+        max_length: 0,
       },
       persistent: true,
     };
@@ -219,7 +221,13 @@ impl Queue {
   }
 
   // Create a new empty queue
-  pub fn new(id: String, requeue_time: u32, deduplication_time: u32, persistent: bool) -> Queue {
+  pub fn new(
+    id: String,
+    requeue_time: u32,
+    deduplication_time: u32,
+    persistent: bool,
+    max_length: u64,
+  ) -> Queue {
     let items: VecDeque<Message> = VecDeque::new();
     let meta = QueueMeta {
       num_requeued: 0,
@@ -228,6 +236,7 @@ impl Queue {
       created_at: timestamp(),
       requeue_time,
       deduplication_time,
+      max_length,
     };
     if persistent {
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
@@ -392,6 +401,19 @@ impl Queue {
       return item_maybe;
     }
     None
+  }
+
+  pub fn can_fit_messages(&self, amount: u64) -> bool {
+    let max = self.max_length();
+    if max == 0 {
+      return true;
+    }
+    let x: u64 = (self.size() as u64) + amount;
+    x <= self.max_length()
+  }
+
+  pub fn max_length(&self) -> u64 {
+    self.meta.max_length
   }
 
   // Returns the size of the queue
