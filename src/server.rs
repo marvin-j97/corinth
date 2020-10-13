@@ -75,6 +75,7 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {Number} result:queue:num_deduplicated Amount of deduplicated items
    * @apiSuccess {Number} result:queue:deduplication_time Time for deduplication ID to expire
    * @apiSuccess {Number} result:queue:requeue_time Time for an unacknowledged message to get added back into the queue
+   * @apiSuccess {Number} result:queue:max_length Queue max length
    * @apiSuccess {String} result:queue:persistent Whether the queue is saved on disk
    * @apiSuccess {Number} result:queue:memory_size Approximate memory usage of the queue
    *

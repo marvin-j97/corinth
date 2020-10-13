@@ -331,6 +331,7 @@ fn format_queue_info(queue: &Queue) -> Value {
     "num_deduplicated": queue.num_deduplicated(),
     "deduplication_time": queue.deduplication_time(),
     "requeue_time": queue.requeue_time(),
+    "max_length": queue.max_length(),
     "persistent": queue.is_persistent(),
     "memory_size": queue.get_memory_size(),
     "num_requeued": queue.num_requeued(),
