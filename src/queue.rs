@@ -150,7 +150,9 @@ fn init_items(id: &String) -> VecDeque<Message> {
 }
 
 fn write_metadata(id: &String, meta: &QueueMeta) {
-  let mut writer = File::create(queue_meta_file(&id)).expect("unable to create meta file");
+  let file = queue_meta_file(&id);
+  eprintln!("Writing metadata of {} to {}", id, file);
+  let mut writer = File::create(&file).expect("unable to create meta file");
   writer
     .write_all(serde_json::to_string(&meta).unwrap().as_bytes())
     .expect("unable to write");
