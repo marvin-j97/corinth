@@ -51,6 +51,7 @@ pub struct QueueMeta {
   num_requeued: u64,
   requeue_time: u32,
   deduplication_time: u32,
+  max_length: u64,
 }
 
 pub struct Queue {
@@ -149,13 +150,19 @@ fn init_items(id: &String) -> VecDeque<Message> {
 }
 
 fn write_metadata(id: &String, meta: &QueueMeta) {
-  let mut writer = File::create(queue_meta_file(&id)).expect("unable to create meta file");
+  let file = queue_meta_file(&id);
+  eprintln!("Writing metadata of {} to {}", id, file);
+  let mut writer = File::create(&file).expect("unable to create meta file");
   writer
     .write_all(serde_json::to_string(&meta).unwrap().as_bytes())
     .expect("unable to write");
 }
 
 impl Queue {
+  pub fn write_metadata(&self) {
+    write_metadata(&self.id, &self.meta)
+  }
+
   pub fn get_memory_size(&self) -> usize {
     size_of::<Queue>()
       + self.size() * size_of::<Message>()
@@ -208,6 +215,7 @@ impl Queue {
         created_at: timestamp(),
         requeue_time: 300,
         deduplication_time: 300,
+        max_length: 0,
       },
       persistent: true,
     };
@@ -219,7 +227,13 @@ impl Queue {
   }
 
   // Create a new empty queue
-  pub fn new(id: String, requeue_time: u32, deduplication_time: u32, persistent: bool) -> Queue {
+  pub fn new(
+    id: String,
+    requeue_time: u32,
+    deduplication_time: u32,
+    persistent: bool,
+    max_length: u64,
+  ) -> Queue {
     let items: VecDeque<Message> = VecDeque::new();
     let meta = QueueMeta {
       num_requeued: 0,
@@ -228,6 +242,7 @@ impl Queue {
       created_at: timestamp(),
       requeue_time,
       deduplication_time,
+      max_length,
     };
     if persistent {
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
@@ -252,7 +267,7 @@ impl Queue {
       self.ack_map.remove(&id);
       self.meta.num_acknowledged += 1;
       if self.persistent {
-        write_metadata(&self.id, &self.meta);
+        self.write_metadata();
       }
       true
     } else {
@@ -283,7 +298,7 @@ impl Queue {
       if dedup_in_map {
         self.meta.num_deduplicated += 1;
         if self.persistent {
-          write_metadata(&self.id, &self.meta);
+          self.write_metadata();
         }
         return false;
       }
@@ -380,7 +395,7 @@ impl Queue {
       if auto_ack {
         self.meta.num_acknowledged += 1;
         if self.persistent {
-          write_metadata(&self.id, &self.meta);
+          self.write_metadata();
         }
       } else {
         let message = item_maybe.clone().unwrap();
@@ -392,6 +407,19 @@ impl Queue {
       return item_maybe;
     }
     None
+  }
+
+  pub fn can_fit_messages(&self, amount: u64) -> bool {
+    let max = self.max_length();
+    if max == 0 {
+      return true;
+    }
+    let x: u64 = (self.size() as u64) + amount;
+    x <= self.max_length()
+  }
+
+  pub fn max_length(&self) -> u64 {
+    self.meta.max_length
   }
 
   // Returns the size of the queue
@@ -422,6 +450,10 @@ impl Queue {
   // Returns the amount of unacknowledged messages currently being tracked
   pub fn ack_size(&self) -> usize {
     self.ack_map.len()
+  }
+
+  pub fn set_max_length(&mut self, max: u64) {
+    self.meta.max_length = max;
   }
 
   pub fn set_deduplication_time(&mut self, time: u32) {
@@ -471,7 +503,7 @@ impl Queue {
         if Path::new(&item_file).exists() {
           remove_file(item_file).expect("Failed to delete item file");
         }
-        write_metadata(&self.id, &self.meta);
+        self.write_metadata();
       }
     }
   }

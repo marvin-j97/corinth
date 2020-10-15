@@ -40,7 +40,7 @@ pub fn create_server() -> Nickel {
       format_success( StatusCode::Ok,String::from("Server info retrieved successfully"), json!({
         "info": {
           "name": String::from("Corinth"),
-          "version": String::from("0.2.0"),
+          "version": String::from("0.3.0"),
           "uptime_ms": uptime_secs * 1000,
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
@@ -75,6 +75,7 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {Number} result:queue:num_deduplicated Amount of deduplicated items
    * @apiSuccess {Number} result:queue:deduplication_time Time for deduplication ID to expire
    * @apiSuccess {Number} result:queue:requeue_time Time for an unacknowledged message to get added back into the queue
+   * @apiSuccess {Number} result:queue:max_length Queue max length
    * @apiSuccess {String} result:queue:persistent Whether the queue is saved on disk
    * @apiSuccess {Number} result:queue:memory_size Approximate memory usage of the queue
    *
@@ -148,6 +149,7 @@ pub fn create_server() -> Nickel {
    * @apiParam {String} query:requeue_time (Optional) Ack time in seconds
    * @apiParam {String} query:deduplication_time (Optional) Deduplication time in seconds
    * @apiParam {String} query:persistent (Optional) Set to "true" to make queue persistent
+   * @apiParam {String} query:max_length (Optional) Queue max length
    *
    * @apiError 400 Invalid time argument
    * @apiError 409 Queue already exists
@@ -162,6 +164,7 @@ pub fn create_server() -> Nickel {
    *
    * @apiParam {String} body:requeue_time (Optional) Ack time in seconds
    * @apiParam {String} body:deduplication_time (Optional) Deduplication time in seconds
+   * @apiParam {String} body:max_length (Optional) Queue max length
    *
    * @apiError 400 Invalid input
    * @apiError 404 Queue not found
