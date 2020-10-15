@@ -72,6 +72,13 @@ define({ "api": [
             "optional": false,
             "field": "query:persistent",
             "description": "<p>(Optional) Set to &quot;true&quot; to make queue persistent</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "query:max_length",
+            "description": "<p>(Optional) Queue max length</p>"
           }
         ]
       }
@@ -210,6 +217,13 @@ define({ "api": [
             "optional": false,
             "field": "body:deduplication_time",
             "description": "<p>(Optional) Deduplication time in seconds</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "body:max_length",
+            "description": "<p>(Optional) Queue max length</p>"
           }
         ]
       }
@@ -405,6 +419,13 @@ define({ "api": [
             "optional": false,
             "field": "result:queue:requeue_time",
             "description": "<p>Time for an unacknowledged message to get added back into the queue</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:queue:max_length",
+            "description": "<p>Queue max length</p>"
           },
           {
             "group": "Success 200",
