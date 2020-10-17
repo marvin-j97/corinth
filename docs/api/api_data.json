@@ -79,6 +79,20 @@
             "optional": false,
             "field": "query:max_length",
             "description": "<p>(Optional) Queue max length</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "query:dead_letter_queue_name",
+            "description": "<p>(Optional) Dead letter queue target</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "query:dead_letter_queue_threshold",
+            "description": "<p>(Optional) Dead letter queue requeue threshold (default: 3)</p>"
           }
         ]
       }
