@@ -8,6 +8,7 @@ axiosRetry(Axios, { retries: 3 });
 export enum MessageState {
   Pending = "Pending",
   Requeued = "Requeued",
+  Failed = "Failed",
 }
 
 export const Message = (

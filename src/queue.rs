@@ -374,6 +374,10 @@ impl Queue {
 
   // Start timeout thread to remove item from ack map & back into queue
   fn schedule_ack_item(&mut self, message: Message, lifetime: u64) {
+    eprintln!(
+      "Schedule ack expiration: message <{}> (lifetime: {} secs)",
+      message.id, lifetime
+    );
     let message_id = message.id.clone();
     self.ack_map.insert(message_id.clone(), message.clone());
     let this_id = self.id.clone();
@@ -415,6 +419,10 @@ impl Queue {
         new_message.state = MessageState::Requeued;
         new_message.updated_at = timestamp();
         new_message.num_requeues += 1;
+        eprintln!(
+          "Requeuing: message <{}> (requeue #: {})",
+          new_message.id, new_message.num_requeues
+        );
         queue.meta.num_requeued += 1;
         queue.enqueue_message(new_message);
       }

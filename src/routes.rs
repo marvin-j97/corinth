@@ -402,6 +402,7 @@ pub fn create_queue_handler<'mw>(
 
     let query = req.query();
     let requeue_time_str = query.get("requeue_time").unwrap_or("300");
+    eprintln!("REQUEUE: {}", requeue_time_str);
     let deduplication_time_str = query.get("deduplication_time").unwrap_or("300");
     let max_length_str = query.get("max_length").unwrap_or("0");
 
