@@ -356,3 +356,21 @@ ava.serial("Dequeue queue head -> empty main queue", async (t) => {
   );
   await sleep(1500);
 });
+
+ava.serial("Delete queue", async (t) => {
+  const res = await Axios.delete(deadLetterQueueUrl, NO_FAIL());
+  t.assert(
+    createExecutableSchema(
+      yxc
+        .object({
+          status: yxc.number().equals(403),
+          data: yxc.object({
+            message: yxc.string().equals("Dead letter queue is in use"),
+            status: yxc.number().equals(403),
+            error: yxc.boolean().true(),
+          }),
+        })
+        .arbitrary()
+    )(res).ok
+  );
+});

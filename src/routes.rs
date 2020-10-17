@@ -570,7 +570,7 @@ pub fn delete_queue_handler<'mw>(
       res.set(StatusCode::Forbidden);
       return res.send(format_error(
         StatusCode::Forbidden,
-        String::from("Queue is a dead letter queue"),
+        String::from("Dead letter queue is in use"),
       ));
     }
 
