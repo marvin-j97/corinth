@@ -77,6 +77,8 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {Number} result:queue:requeue_time Time for an unacknowledged message to get added back into the queue
    * @apiSuccess {Number} result:queue:max_length Queue max length
    * @apiSuccess {String} result:queue:persistent Whether the queue is saved on disk
+   * @apiSuccess {Number} result:queue:dead_letter_queue:name Dead letter queue target
+   * @apiSuccess {Number} result:queue:dead_letter_queue:threshold Dead letter queue threshold
    * @apiSuccess {Number} result:queue:memory_size Approximate memory usage of the queue
    *
    * @apiError 404 Queue not found
