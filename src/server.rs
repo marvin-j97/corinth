@@ -150,6 +150,8 @@ pub fn create_server() -> Nickel {
    * @apiParam {String} query:deduplication_time (Optional) Deduplication time in seconds
    * @apiParam {String} query:persistent (Optional) Set to "true" to make queue persistent
    * @apiParam {String} query:max_length (Optional) Queue max length
+   * @apiParam {String} query:dead_letter_queue_name (Optional) Dead letter queue target
+   * @apiParam {String} query:dead_letter_queue_threshold (Optional) Dead letter queue requeue threshold (default: 3)
    *
    * @apiError 400 Invalid time argument
    * @apiError 409 Queue already exists
