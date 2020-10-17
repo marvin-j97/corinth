@@ -452,6 +452,20 @@ define({ "api": [
             "group": "Success 200",
             "type": "Number",
             "optional": false,
+            "field": "result:queue:dead_letter_queue:name",
+            "description": "<p>Dead letter queue target</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:queue:dead_letter_queue:threshold",
+            "description": "<p>Dead letter queue threshold</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
             "field": "result:queue:memory_size",
             "description": "<p>Approximate memory usage of the queue</p>"
           }
