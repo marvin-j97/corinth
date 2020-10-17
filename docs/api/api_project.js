@@ -1,6 +1,6 @@
 define({
   "name": "Corinth",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A portable Rust message queue",
   "title": "Corinth API docs",
   "sampleUrl": false,
@@ -8,7 +8,7 @@ define({
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "2020-10-13T20:45:17.090Z",
+    "time": "2020-10-15T20:31:36.967Z",
     "url": "https://apidocjs.com",
     "version": "0.25.0"
   }
