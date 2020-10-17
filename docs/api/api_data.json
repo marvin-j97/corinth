@@ -452,14 +452,14 @@
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "result:queue:dead_letter_queue:name",
+            "field": "result:queue:dead_letter:name",
             "description": "<p>Dead letter queue target</p>"
           },
           {
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "result:queue:dead_letter_queue:threshold",
+            "field": "result:queue:dead_letter:threshold",
             "description": "<p>Dead letter queue threshold</p>"
           },
           {
