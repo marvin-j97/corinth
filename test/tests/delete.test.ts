@@ -109,6 +109,7 @@ ava.serial(`${NUM_ITEMS} items should be queued`, async (t) => {
                 requeue_time: yxc.number().equals(300),
                 persistent: yxc.boolean().false(),
                 memory_size: yxc.number(),
+                dead_letter: yxc.null(),
               }),
             }),
           }),

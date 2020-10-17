@@ -17,7 +17,7 @@ fn print_all_durations(time: SystemTime) {
 fn simple_benchmark(size: u32) -> u64 {
   eprintln!("Running benchmark");
   let mem_usage;
-  let mut queue = crate::queue::Queue::new("test0".to_string(), 300, 300, false, 0);
+  let mut queue = crate::queue::Queue::new("test0".to_string(), 300, 300, false, 0, None);
   {
     let now = SystemTime::now();
     eprintln!("\nEnqueuing {} items", size);
@@ -53,7 +53,7 @@ fn simple_benchmark(size: u32) -> u64 {
 }
 
 fn memory_test(size: u32) -> u64 {
-  let mut queue = Queue::new("test0".to_string(), 300, 300, false, 0);
+  let mut queue = Queue::new("test0".to_string(), 300, 300, false, 0, None);
   {
     let now = SystemTime::now();
     eprintln!("\nEnqueuing {} items", size);

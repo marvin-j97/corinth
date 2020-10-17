@@ -17,6 +17,7 @@ use std::time::Duration;
 enum MessageState {
   Pending,
   Requeued,
+  Failed,
 }
 
 type StringifiedJson = String;
@@ -43,7 +44,13 @@ pub struct Message {
   num_requeues: u16,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
+pub struct QueueDeadLetterSettings {
+  pub name: String,
+  pub threshold: u16,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct QueueMeta {
   created_at: u64,
   num_acknowledged: u64,
@@ -52,6 +59,7 @@ pub struct QueueMeta {
   requeue_time: u32,
   deduplication_time: u32,
   max_length: u64,
+  pub dead_letter_queue: Option<QueueDeadLetterSettings>,
 }
 
 pub struct Queue {
@@ -158,6 +166,18 @@ fn write_metadata(id: &String, meta: &QueueMeta) {
     .expect("unable to write");
 }
 
+fn get_message(queue: &String, msg_id: &String) -> Option<Message> {
+  let mut queue_map = QUEUES.lock().unwrap();
+  let this_queue = queue_map.get_mut(queue);
+
+  if this_queue.is_some() {
+    let message = this_queue.unwrap().ack_map.remove(msg_id);
+    message
+  } else {
+    None
+  }
+}
+
 impl Queue {
   pub fn write_metadata(&self) {
     write_metadata(&self.id, &self.meta)
@@ -216,6 +236,7 @@ impl Queue {
         requeue_time: 300,
         deduplication_time: 300,
         max_length: 0,
+        dead_letter_queue: None,
       },
       persistent: true,
     };
@@ -233,6 +254,7 @@ impl Queue {
     deduplication_time: u32,
     persistent: bool,
     max_length: u64,
+    dead_letter_queue: Option<QueueDeadLetterSettings>,
   ) -> Queue {
     let items: VecDeque<Message> = VecDeque::new();
     let meta = QueueMeta {
@@ -243,6 +265,7 @@ impl Queue {
       requeue_time,
       deduplication_time,
       max_length,
+      dead_letter_queue,
     };
     if persistent {
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
@@ -356,19 +379,44 @@ impl Queue {
     let this_id = self.id.clone();
     thread::spawn(move || {
       thread::sleep(Duration::from_secs(lifetime));
-      let mut queue_map = QUEUES.lock().unwrap();
-      let this_queue = queue_map.get_mut(&this_id);
-      if this_queue.is_some() {
-        let queue = this_queue.unwrap();
-        let message = queue.ack_map.remove(&message_id);
-        if message.is_some() {
-          let mut new_message = message.unwrap().clone();
-          new_message.state = MessageState::Requeued;
-          new_message.updated_at = timestamp();
-          new_message.num_requeues += 1;
-          queue.meta.num_requeued += 1;
-          queue.enqueue_message(new_message);
+      let message = get_message(&this_id, &message_id);
+      if message.is_some() {
+        let mut queue_map = QUEUES.lock().unwrap();
+        let mut new_message = message.unwrap().clone();
+
+        let queue = queue_map.get(&this_id).unwrap();
+
+        let dead_letter_options = queue.get_meta().dead_letter_queue;
+        if dead_letter_options.is_some() {
+          if new_message.num_requeues >= dead_letter_options.clone().unwrap().threshold {
+            // Move into dead letter queue
+            let dead_letter_queue = queue_map.get_mut(&dead_letter_options.clone().unwrap().name);
+            if dead_letter_queue.is_some() {
+              let dead_letter_queue = dead_letter_queue.unwrap();
+              new_message.state = MessageState::Failed;
+              new_message.updated_at = timestamp();
+              eprintln!(
+                "Message <{}> added to dead letter queue <{}>",
+                new_message.id, dead_letter_queue.id
+              );
+              dead_letter_queue.enqueue_message(new_message);
+              return;
+            } else {
+              eprintln!(
+                "Dead letter queue <{}> not found",
+                dead_letter_options.unwrap().name
+              );
+            }
+          }
         }
+
+        // Requeue
+        let queue = queue_map.get_mut(&this_id).unwrap();
+        new_message.state = MessageState::Requeued;
+        new_message.updated_at = timestamp();
+        new_message.num_requeues += 1;
+        queue.meta.num_requeued += 1;
+        queue.enqueue_message(new_message);
       }
     });
   }
@@ -416,6 +464,10 @@ impl Queue {
     }
     let x: u64 = (self.size() as u64) + amount;
     x <= self.max_length()
+  }
+
+  pub fn get_meta(&self) -> QueueMeta {
+    self.meta.clone()
   }
 
   pub fn max_length(&self) -> u64 {

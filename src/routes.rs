@@ -1,9 +1,7 @@
 use crate::date::iso_date;
 use crate::env::get_compaction_interval;
 use crate::global_data::{queue_exists, QUEUES};
-use crate::queue::unwrap_message;
-use crate::queue::Message;
-use crate::queue::Queue;
+use crate::queue::{unwrap_message, Message, Queue, QueueDeadLetterSettings};
 use crate::response::{format_error, format_success};
 use nickel::status::StatusCode;
 use nickel::MiddlewareResult;
@@ -335,6 +333,7 @@ fn format_queue_info(queue: &Queue) -> Value {
     "persistent": queue.is_persistent(),
     "memory_size": queue.get_memory_size(),
     "num_requeued": queue.num_requeued(),
+    "dead_letter": queue.get_meta().dead_letter_queue
   })
 }
 
@@ -422,14 +421,45 @@ pub fn create_queue_handler<'mw>(
     }
 
     let mut queue_map = QUEUES.lock().unwrap();
+
+    let dead_letter_queue_name = query.get("dead_letter_queue_name");
+
+    if dead_letter_queue_name.is_some() {
+      let dead_letter_queue = queue_map.get(&String::from(dead_letter_queue_name.unwrap()));
+      if dead_letter_queue.is_none() {
+        res.set(MediaType::Json);
+        res.set(StatusCode::NotFound);
+        return res.send(format_error(
+          StatusCode::NotFound,
+          String::from("Dead letter target not found"),
+        ));
+      }
+    }
+
+    let dead_letter_queue_threshold = query
+      .get("dead_letter_queue_threshold")
+      .unwrap_or("3")
+      .parse::<u16>()
+      .ok();
+
+    let dead_letter_queue = if dead_letter_queue_name.is_some() {
+      Some(QueueDeadLetterSettings {
+        name: String::from(dead_letter_queue_name.unwrap()),
+        threshold: dead_letter_queue_threshold.unwrap(),
+      })
+    } else {
+      None
+    };
+
     let mut queue = Queue::new(
       queue_name.clone(),
       requeue_time_result.unwrap(),
       deduplication_time_result.unwrap(),
       persistent,
       max_length_result.unwrap(),
+      dead_letter_queue,
     );
-    queue.start_compact_interval(get_compaction_interval().into());
+    queue.start_compact_interval(get_compaction_interval());
     queue_map.insert(queue_name.clone(), queue);
 
     res.set(MediaType::Json);
@@ -506,6 +536,18 @@ pub fn purge_queue_handler<'mw>(
   }
 }
 
+fn is_dead_letter_queue(queues: Vec<&Queue>, queue_name: &String) -> bool {
+  queues.iter().any(|x| {
+    let meta = x.get_meta();
+    if meta.dead_letter_queue.is_some() {
+      if meta.dead_letter_queue.unwrap().name == *queue_name {
+        return true;
+      }
+    }
+    false
+  })
+}
+
 pub fn delete_queue_handler<'mw>(
   req: &mut Request,
   mut res: Response<'mw>,
@@ -521,6 +563,16 @@ pub fn delete_queue_handler<'mw>(
     let mut queue_map = QUEUES.lock().unwrap();
 
     let queue_name = String::from(req.param("queue_name").unwrap());
+
+    if is_dead_letter_queue(queue_map.values().collect(), &queue_name) {
+      res.set(MediaType::Json);
+      res.set(StatusCode::Forbidden);
+      return res.send(format_error(
+        StatusCode::Forbidden,
+        String::from("Queue is a dead letter queue"),
+      ));
+    }
+
     let mut queue = queue_map.remove(&queue_name).unwrap();
     queue.purge(true);
 

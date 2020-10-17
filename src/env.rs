@@ -23,7 +23,7 @@ pub fn get_port() -> u16 {
   }
 }
 
-pub fn get_compaction_interval() -> u32 {
+pub fn get_compaction_interval() -> u64 {
   let num = try_env_to_uint(String::from("CORINTH_COMPACT_INTERVAL"));
   if num.is_some() {
     num.unwrap().try_into().expect("Invalid port value")

@@ -59,6 +59,7 @@ ava.serial("Queue should be empty", async (t) => {
                 requeue_time: yxc.number().equals(300),
                 persistent: yxc.boolean().false(),
                 memory_size: yxc.number(),
+                dead_letter: yxc.null(),
               }),
             }),
           }),
