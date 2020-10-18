@@ -72,11 +72,17 @@ curl -X POST http://localhost:44444/queue/my-queue/[message id]/ack
 
 ## Build from source
 
+https://hub.docker.com/r/dotvirus/corinth
+
 ```
 cargo build --release
 ```
 
 ## Docker
+
+```
+docker pull dotvirus/corinth
+```
 
 Build the image
 
