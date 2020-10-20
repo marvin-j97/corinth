@@ -126,7 +126,6 @@ docker volume inspect corinthvol
 
 For more details on Docker volumes, check out the [official docs here](https://docs.docker.com/storage/volumes/#start-a-container-with-a-volume).
 
-## Roadmap
+## Node.js client
 
-- See GitHub issues (https://github.com/dotvirus/corinth/issues)
-- Node.js API wrapper package
+https://github.com/dotvirus/corinth.js
