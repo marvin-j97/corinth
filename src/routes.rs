@@ -171,14 +171,20 @@ pub fn patch_queue_handler<'mw>(
   let queue = queue_map.get_mut(&queue_name).unwrap();
 
   if body.deduplication_time.is_some() {
-    queue.set_deduplication_time(body.deduplication_time.unwrap());
+    let value = body.deduplication_time.unwrap();
+    eprintln!("{}: Setting deduplication_time to {}", queue_name, value);
+    queue.set_deduplication_time(value);
   }
 
-  if body.requeue_time.is_some() {
+  if body.requeue_time.is_some() {  
+    let value = body.requeue_time.unwrap();
+    eprintln!("{}: Setting requeue_time to {}", queue_name, value);
     queue.set_requeue_time(body.requeue_time.unwrap());
   }
 
   if body.max_length.is_some() {
+    let value = body.max_length.unwrap();
+    eprintln!("{}: Setting max_length to {}", queue_name, value);
     queue.set_max_length(body.max_length.unwrap());
   }
 
@@ -402,7 +408,6 @@ pub fn create_queue_handler<'mw>(
 
     let query = req.query();
     let requeue_time_str = query.get("requeue_time").unwrap_or("300");
-    eprintln!("REQUEUE: {}", requeue_time_str);
     let deduplication_time_str = query.get("deduplication_time").unwrap_or("300");
     let max_length_str = query.get("max_length").unwrap_or("0");
 
