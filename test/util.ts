@@ -1,4 +1,3 @@
-// import execa from "execa";
 import { spawn } from "child_process";
 import { platform } from "os";
 import { rmdirSync, existsSync } from "fs";
