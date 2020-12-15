@@ -1,7 +1,6 @@
 import { IP } from "../util";
 import { defineWorkflow } from "voce";
 import { createQueue, enqueue, queueUri } from "../common";
-import Axios from "axios";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {

@@ -4,7 +4,7 @@ import { queueUri } from "../common";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "404_queue";
   const queueUrl = queueUri(queueName);
 
   return {

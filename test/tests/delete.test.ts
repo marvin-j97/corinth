@@ -6,7 +6,7 @@ import { existsSync } from "fs";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "purge_non_persistent";
+  const queueName = "delete_queue";
   const queueUrl = queueUri(queueName);
   const queueFolder = `.corinth/queues/${queueName}`;
 

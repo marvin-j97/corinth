@@ -4,7 +4,7 @@ import { queueUri, createQueue, Message, deleteQueue } from "../common";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "enqueue_no_dedup";
   const queueUrl = queueUri(queueName);
   const testItem = {
     description: "This is a test object!",
@@ -21,7 +21,7 @@ export default defineWorkflow(async () => {
   const NUM_ITEMS = 10;
 
   return {
-    title: "Enqueue item to non-existing queue",
+    title: "Enqueue item (no dedup)",
     baseUrl: IP,
     onAfter: () => deleteQueue(queueName),
     steps: [

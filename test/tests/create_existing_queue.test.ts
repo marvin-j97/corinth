@@ -4,7 +4,7 @@ import { createQueue, deleteQueue, queueUri } from "../common";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "queue_conflict";
   await createQueue(queueName);
 
   return {
