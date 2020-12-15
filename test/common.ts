@@ -43,3 +43,17 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
 export function deleteQueue(name: string) {
   return Axios.delete(queueUrl(name));
 }
+
+export function enqueue<T>(
+  name: string,
+  messages: { item: T; deduplication_id: string | null }[]
+) {
+  return Axios.post(queueUrl(name) + "/enqueue", {
+    messages,
+  });
+}
+
+export async function dequeue<T>(name: string) {
+  const res = await Axios.post(queueUrl(name) + "/dequeue");
+  return res.data.result.items;
+}

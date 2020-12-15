@@ -1,0 +1,67 @@
+import { defineWorkflow } from "voce";
+import { expect } from "chai";
+import { IP } from "../util";
+import { deleteQueue, queueUri } from "../common";
+import { existsSync } from "fs";
+import yxc from "@dotvirus/yxc";
+
+export default defineWorkflow(async () => {
+  const queueName = "volatile_new_queue_test";
+  const queueUrl = queueUri(queueName);
+
+  expect(existsSync(`.corinth/queues/${queueName}/meta.json`)).to.be.false;
+  expect(existsSync(`.corinth/queues/${queueName}/items.jsonl`)).to.be.false;
+
+  return {
+    title: "Create volatile queue",
+    baseUrl: IP,
+    onAfter: () => deleteQueue(queueName),
+    steps: [
+      {
+        method: "PUT",
+        status: 201,
+        url: queueUrl,
+        query: {
+          persistent: "false",
+        },
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue created successfully"),
+          status: yxc.number().equals(201),
+          result: yxc.null(),
+        }),
+      },
+      {
+        url: queueUrl,
+        status: 200,
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue info retrieved successfully"),
+          status: yxc.number().equals(200),
+          result: yxc.object({
+            queue: yxc.object({
+              name: yxc.string().equals(queueName),
+              created_at: yxc.number().integer(),
+              size: yxc.number().equals(0),
+              num_deduplicating: yxc.number().equals(0),
+              num_unacknowledged: yxc.number().equals(0),
+              num_deduplicated: yxc.number().equals(0),
+              num_acknowledged: yxc.number().equals(0),
+              num_requeued: yxc.number().equals(0),
+              deduplication_time: yxc.number().equals(300),
+              max_length: yxc.number().eq(0),
+              requeue_time: yxc.number().equals(300),
+              persistent: yxc.boolean().false(),
+              memory_size: yxc.number(),
+              dead_letter: yxc.null(),
+            }),
+          }),
+        }),
+        validate: () => {
+          expect(existsSync(`.corinth/queues/${queueName}/meta.json`)).to.be
+            .false;
+          expect(existsSync(`.corinth/queues/${queueName}/items.jsonl`)).to.be
+            .false;
+        },
+      },
+    ],
+  };
+});
