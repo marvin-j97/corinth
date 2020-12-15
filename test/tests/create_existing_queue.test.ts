@@ -1,34 +1,27 @@
-import ava, { before, after } from "ava";
-import { spawnCorinth, NO_FAIL, persistenceTeardown } from "../util";
-import { createQueue } from "../common";
-import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import { IP } from "../util";
+import { defineWorkflow } from "voce";
+import { createQueue, deleteQueue, queueUri } from "../common";
+import yxc from "@dotvirus/yxc";
 
-before(persistenceTeardown);
-after(persistenceTeardown);
+export default defineWorkflow(async () => {
+  const queueName = "new_queue";
+  await createQueue(queueName);
 
-spawnCorinth();
-
-const queueName = "new_queue";
-
-ava.serial("Create volatile queue", async (t) => {
-  await createQueue(queueName, NO_FAIL());
-  t.pass();
-});
-
-ava.serial("Create conflicting queue", async (t) => {
-  const res = await createQueue(queueName, NO_FAIL());
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+  return {
+    title: "Create conflicting queue",
+    baseUrl: IP,
+    onAfter: () => deleteQueue(queueName),
+    steps: [
+      {
+        method: "PUT",
+        status: 409,
+        url: queueUri(queueName),
+        resBody: yxc.object({
+          error: yxc.boolean().true(),
+          message: yxc.string().equals("Queue already exists"),
           status: yxc.number().equals(409),
-          data: yxc.object({
-            error: yxc.boolean().true(),
-            message: yxc.string().equals("Queue already exists"),
-            status: yxc.number().equals(409),
-          }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
+        }),
+      },
+    ],
+  };
 });

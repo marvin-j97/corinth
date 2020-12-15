@@ -1,4 +1,5 @@
-import execa from "execa";
+// import execa from "execa";
+import { spawn } from "child_process";
 import { platform } from "os";
 import { rmdirSync, existsSync } from "fs";
 import debug from "debug";
@@ -44,22 +45,6 @@ function executableName(filename: string) {
   return filename + (platform() === "win32" ? ".exe" : "");
 }
 
-export function spawnCorinth(port = PORT, interval: number = 0) {
-  const exeName = executableName("corinth");
-  const path = `./target/debug/${exeName}`;
-  debug("test:message")(`Spawning ${path} with port ${port}`);
-  const proc = execa(path, {
-    env: {
-      CORINTH_PORT: port.toString(),
-      CORINTH_COMPACT_INTERVAL: interval.toString(),
-    },
-  });
-  proc.stderr?.on("data", (msg) => {
-    corinthLog(msg.toString());
-  });
-  return proc;
-}
-
 export function unixToHammer(unix: number) {
   return unix * 1000;
 }
@@ -70,4 +55,23 @@ export const NO_FAIL = () => ({
 
 export function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+export async function spawnCorinth(port = PORT, interval: number = 0) {
+  const exeName = executableName("corinth");
+  const path = `./target/debug/${exeName}`;
+  logMessage(`Spawning ${path} with port ${port}`);
+  const proc = spawn(path, {
+    env: {
+      CORINTH_PORT: port.toString(),
+      CORINTH_COMPACT_INTERVAL: interval.toString(),
+    },
+    stdio: "pipe",
+  });
+  proc.stderr?.on("data", (msg) => {
+    corinthLog(msg.toString());
+  });
+  // await sleep(1000);
+  logMessage(`Spawned corinth`);
+  return proc;
 }

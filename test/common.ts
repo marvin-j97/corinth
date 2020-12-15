@@ -1,9 +1,6 @@
-import Axios, { AxiosRequestConfig } from "axios";
 import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
-import axiosRetry from "axios-retry";
-
-axiosRetry(Axios, { retries: 3 });
+import Axios, { AxiosRequestConfig } from "axios";
 
 export enum MessageState {
   Pending = "Pending",
@@ -25,8 +22,12 @@ export const Message = (
     num_requeues,
   });
 
+export function queueUri(name: string) {
+  return `/queue/${name}`;
+}
+
 export function queueUrl(name: string) {
-  return getUrl(`/queue/${name}`);
+  return getUrl(queueUri(name));
 }
 
 export function createQueue(name: string, opts?: AxiosRequestConfig) {
@@ -37,4 +38,8 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
       ...(opts?.params || {}),
     },
   });
+}
+
+export function deleteQueue(name: string) {
+  return Axios.delete(queueUrl(name));
 }
