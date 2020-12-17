@@ -40,8 +40,19 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
   });
 }
 
+export async function listQueues(): Promise<{ name: string }[]> {
+  const { data } = await Axios.get(getUrl("/queues"));
+  return data.result.queues.items;
+}
+
 export function deleteQueue(name: string) {
   return Axios.delete(queueUrl(name));
+}
+
+export async function deleteAllQueues() {
+  for (const { name } of await listQueues()) {
+    await deleteQueue(name);
+  }
 }
 
 export async function enqueue<T>(

@@ -1,10 +1,12 @@
 import { IP } from "../util";
 import { defineWorkflow } from "voce";
-import { createQueue } from "../common";
+import { createQueue, deleteAllQueues } from "../common";
 import yxc from "@dotvirus/yxc";
 import { expect } from "chai";
 
 export default defineWorkflow(async () => {
+  await deleteAllQueues();
+
   const names = ["asd", "peter", "hello", "paradise_circus", "test", "zzz"];
   for (const name of names) {
     await createQueue(name);
