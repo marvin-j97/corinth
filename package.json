@@ -3,7 +3,7 @@
   "description": "API tests for Corinth",
   "scripts": {
     "doc": "apidoc -i src -o docs/api -v -f \".*\\.rs$\"",
-    "test:verbose": "cross-env DEBUG=corinth:test:* npm test",
+    "test:verbose": "cross-env DEBUG=corinth npm test",
     "test": "voce \"test/tests/**/*.test.ts\" --config voce.config.ts --register ts-node/register"
   },
   "devDependencies": {

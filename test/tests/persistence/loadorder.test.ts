@@ -10,13 +10,11 @@ import { createQueue, dequeue, enqueue, queueUri } from "../../common";
 import yxc from "@dotvirus/yxc";
 import { assert, expect } from "chai";
 import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
 import Axios from "axios";
 
 export default defineWorkflow(async () => {
   const queueName = "loadorder_test";
   const queueUrl = queueUri(queueName);
-  const dequeueUrl = queueUrl + "/dequeue";
 
   await createQueue(queueName, {
     params: {
