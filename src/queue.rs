@@ -269,6 +269,7 @@ impl Queue {
     };
     if persistent {
       create_dir_all(get_queue_folder(&id)).expect("Invalid folder name");
+      eprintln!("Created queue folder");
       write_metadata(&id, &meta);
     }
     return Queue {

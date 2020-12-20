@@ -1,79 +1,71 @@
-import ava, { before, after } from "ava";
-import Axios from "axios";
-import { spawnCorinth, NO_FAIL, persistenceTeardown } from "../util";
-import { queueUrl as getQueueUrl, createQueue } from "../common";
-import yxc, { createExecutableSchema } from "@dotvirus/yxc";
+import { defineWorkflow } from "voce";
+import { expect } from "chai";
+import { IP, persistenceTeardown } from "../util";
+import { deleteQueue, queueUri } from "../common";
 import { existsSync } from "fs";
-import axiosRetry from "axios-retry";
+import yxc from "@dotvirus/yxc";
 
-axiosRetry(Axios, { retries: 3 });
+export default defineWorkflow(async () => {
+  const queueName = "persistent_new_queue_test";
+  const queueUrl = queueUri(queueName);
 
-before(persistenceTeardown);
-after(persistenceTeardown);
+  expect(existsSync(`.corinth/queues/${queueName}/meta.json`)).to.be.false;
+  expect(existsSync(`.corinth/queues/${queueName}/items.jsonl`)).to.be.false;
 
-spawnCorinth();
-
-const queueName = "persistent_new_queue_test";
-const queueUrl = getQueueUrl(queueName);
-
-ava.serial("Create persistent queue", async (t) => {
-  t.assert(!existsSync(`.corinth/queues/${queueName}/meta.json`));
-  t.assert(!existsSync(`.corinth/queues/${queueName}/items.jsonl`));
-  const res = await createQueue(queueName, {
-    ...NO_FAIL(),
-    params: {
-      persistent: true,
+  return {
+    title: "Create persistent queue",
+    baseUrl: IP,
+    onBefore: persistenceTeardown,
+    onAfter: async () => {
+      persistenceTeardown();
+      await deleteQueue(queueName);
     },
-  });
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+    steps: [
+      {
+        method: "PUT",
+        status: 201,
+        url: queueUrl,
+        query: {
+          persistent: "true",
+        },
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue created successfully"),
           status: yxc.number().equals(201),
-          data: yxc.object({
-            message: yxc.string().equals("Queue created successfully"),
-            status: yxc.number().equals(201),
-            result: yxc.null(),
-          }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-});
-
-ava.serial("Queue should be empty", async (t) => {
-  const res = await Axios.get(queueUrl, NO_FAIL());
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+          result: yxc.null(),
+        }),
+      },
+      {
+        url: queueUrl,
+        status: 200,
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue info retrieved successfully"),
           status: yxc.number().equals(200),
-          data: yxc.object({
-            message: yxc.string().equals("Queue info retrieved successfully"),
-            status: yxc.number().equals(200),
-            result: yxc.object({
-              queue: yxc.object({
-                name: yxc.string().equals(queueName),
-                created_at: yxc.number().integer(),
-                size: yxc.number().equals(0),
-                num_deduplicating: yxc.number().equals(0),
-                num_unacknowledged: yxc.number().equals(0),
-                num_deduplicated: yxc.number().equals(0),
-                num_acknowledged: yxc.number().equals(0),
-                num_requeued: yxc.number().equals(0),
-                deduplication_time: yxc.number().equals(300),
-                max_length: yxc.number().eq(0),
-                requeue_time: yxc.number().equals(300),
-                persistent: yxc.boolean().true(),
-                memory_size: yxc.number(),
-                dead_letter: yxc.null(),
-              }),
+          result: yxc.object({
+            queue: yxc.object({
+              name: yxc.string().equals(queueName),
+              created_at: yxc.number().integer(),
+              size: yxc.number().equals(0),
+              num_deduplicating: yxc.number().equals(0),
+              num_unacknowledged: yxc.number().equals(0),
+              num_deduplicated: yxc.number().equals(0),
+              num_acknowledged: yxc.number().equals(0),
+              num_requeued: yxc.number().equals(0),
+              deduplication_time: yxc.number().equals(300),
+              max_length: yxc.number().eq(0),
+              requeue_time: yxc.number().equals(300),
+              persistent: yxc.boolean().true(),
+              memory_size: yxc.number(),
+              dead_letter: yxc.null(),
             }),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-  t.assert(existsSync(`.corinth/queues/${queueName}/meta.json`));
-  t.assert(!existsSync(`.corinth/queues/${queueName}/items.jsonl`));
+        }),
+        validate: () => {
+          expect(existsSync(`.corinth/queues/${queueName}/meta.json`)).to.be
+            .true;
+          expect(existsSync(`.corinth/queues/${queueName}/items.jsonl`)).to.be
+            .false;
+        },
+      },
+    ],
+  };
 });

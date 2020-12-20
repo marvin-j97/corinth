@@ -1,9 +1,6 @@
-import Axios, { AxiosRequestConfig } from "axios";
 import { getUrl } from "./util";
 import yxc from "@dotvirus/yxc";
-import axiosRetry from "axios-retry";
-
-axiosRetry(Axios, { retries: 3 });
+import Axios, { AxiosRequestConfig } from "axios";
 
 export enum MessageState {
   Pending = "Pending",
@@ -25,8 +22,12 @@ export const Message = (
     num_requeues,
   });
 
+export function queueUri(name: string) {
+  return `/queue/${name}`;
+}
+
 export function queueUrl(name: string) {
-  return getUrl(`/queue/${name}`);
+  return getUrl(queueUri(name));
 }
 
 export function createQueue(name: string, opts?: AxiosRequestConfig) {
@@ -37,4 +38,41 @@ export function createQueue(name: string, opts?: AxiosRequestConfig) {
       ...(opts?.params || {}),
     },
   });
+}
+
+export async function listQueues(): Promise<{ name: string }[]> {
+  const { data } = await Axios.get(getUrl("/queues"));
+  return data.result.queues.items;
+}
+
+export function deleteQueue(name: string) {
+  return Axios.delete(queueUrl(name));
+}
+
+export async function deleteAllQueues() {
+  for (const { name } of await listQueues()) {
+    await deleteQueue(name);
+  }
+}
+
+export async function enqueue<T>(
+  name: string,
+  messages: { item: T; deduplication_id: string | null }[]
+): Promise<{ items: { id: string; item: T; state: MessageState }[] }> {
+  const { data } = await Axios.post(queueUrl(name) + "/enqueue", {
+    messages,
+  });
+  return data.result;
+}
+
+export async function dequeue<T>(
+  name: string,
+  ack = false
+): Promise<{ items: { id: string; item: T; state: MessageState } }[]> {
+  const res = await Axios.post(queueUrl(name) + "/dequeue", null, {
+    params: {
+      ack: String(ack),
+    },
+  });
+  return res.data.result.items;
 }

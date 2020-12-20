@@ -1,212 +1,149 @@
-import ava, { before, after } from "ava";
-import Axios from "axios";
-import { spawnCorinth, NO_FAIL, sleep, persistenceTeardown } from "../util";
-import { queueUrl as getQueueUrl, createQueue, Message } from "../common";
-import yxc, { createExecutableSchema } from "@dotvirus/yxc";
-import axiosRetry from "axios-retry";
+import { defineWorkflow } from "voce";
+import { IP, sleep } from "../util";
+import { queueUri, createQueue, Message, enqueue } from "../common";
+import yxc from "@dotvirus/yxc";
 
-axiosRetry(Axios, { retries: 3 });
-
-before(persistenceTeardown);
-after(persistenceTeardown);
-
-spawnCorinth();
-
-const queueName = "new_queue";
-const axiosConfig = NO_FAIL();
-const queueUrl = getQueueUrl(queueName);
-const testItem = {
-  description: "This is a test object!",
-};
-const reqBody = {
-  messages: [
+export default defineWorkflow(async () => {
+  const queueName = "new_queue";
+  const queueUrl = queueUri(queueName);
+  const testItem = {
+    description: "This is a test object!",
+  };
+  const messages = [
     {
       item: testItem,
       deduplication_id: "i5joaibj5oiwj5",
     },
-  ],
-};
+  ];
 
-ava.serial("Create volatile queue", async (t) => {
   await createQueue(queueName, {
-    ...NO_FAIL(),
     params: {
       deduplication_time: 3,
     },
   });
-  t.pass();
-});
 
-ava.serial("Enqueue first item", async (t) => {
-  const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+  await enqueue(queueName, messages);
+
+  return {
+    title: "Dedup expiration",
+    baseUrl: IP,
+    steps: [
+      ...[0, 1, 2, 3, 4].map((x) => ({
+        title: `Enqueue more items ${x}`,
+        url: queueUrl + "/enqueue",
+        status: 202,
+        method: "POST",
+        reqBody: { messages },
+        resBody: yxc.object({
+          message: yxc.string().equals("Request processed successfully"),
           status: yxc.number().equals(202),
-          data: yxc.object({
-            message: yxc.string().equals("Request processed successfully"),
-            status: yxc.number().equals(202),
-            result: yxc.object({
-              items: yxc.array(Message()).len(1),
-              num_enqueued: yxc.number().equals(1),
-              num_deduplicated: yxc.number().equals(0),
-            }),
+          result: yxc.object({
+            items: yxc.array(Message()).len(0),
+            num_enqueued: yxc.number().equals(0),
+            num_deduplicated: yxc.number().equals(1),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-});
-
-ava.serial("Enqueue more items", async (t) => {
-  for (let i = 0; i < 5; i++) {
-    const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
-    t.assert(
-      createExecutableSchema(
-        yxc
-          .object({
-            status: yxc.number().equals(202),
-            data: yxc.object({
-              message: yxc.string().equals("Request processed successfully"),
-              status: yxc.number().equals(202),
-              result: yxc.object({
-                items: yxc.array(Message()).len(0),
-                num_enqueued: yxc.number().equals(0),
-                num_deduplicated: yxc.number().equals(1),
-              }),
-            }),
-          })
-          .arbitrary()
-      )(res).ok
-    );
-  }
-});
-
-ava.serial("1 item should be queued", async (t) => {
-  const res = await Axios.get(queueUrl, NO_FAIL());
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+        }),
+      })),
+      {
+        title: "1 item should be queued",
+        status: 200,
+        url: queueUrl,
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue info retrieved successfully"),
           status: yxc.number().equals(200),
-          data: yxc.object({
-            message: yxc.string().equals("Queue info retrieved successfully"),
-            status: yxc.number().equals(200),
-            result: yxc.object({
-              queue: yxc.object({
-                name: yxc.string().equals(queueName),
-                created_at: yxc.number().integer(),
-                size: yxc.number().equals(1),
-                num_deduplicating: yxc.number().equals(1),
-                num_unacknowledged: yxc.number().equals(0),
-                num_deduplicated: yxc.number().equals(5),
-                num_acknowledged: yxc.number().equals(0),
-                num_requeued: yxc.number().equals(0),
-                deduplication_time: yxc.number().equals(3),
-                max_length: yxc.number().eq(0),
-                requeue_time: yxc.number().equals(300),
-                persistent: yxc.boolean().false(),
-                memory_size: yxc.number(),
-                dead_letter: yxc.null(),
-              }),
+          result: yxc.object({
+            queue: yxc.object({
+              name: yxc.string().equals(queueName),
+              created_at: yxc.number().integer(),
+              size: yxc.number().equals(1),
+              num_deduplicating: yxc.number().equals(1),
+              num_unacknowledged: yxc.number().equals(0),
+              num_deduplicated: yxc.number().equals(5),
+              num_acknowledged: yxc.number().equals(0),
+              num_requeued: yxc.number().equals(0),
+              deduplication_time: yxc.number().equals(3),
+              max_length: yxc.number().eq(0),
+              requeue_time: yxc.number().equals(300),
+              persistent: yxc.boolean().false(),
+              memory_size: yxc.number(),
+              dead_letter: yxc.null(),
             }),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-  await sleep(3000);
-});
-
-ava.serial("1 item should be queued, but no dedup anymore", async (t) => {
-  const res = await Axios.get(queueUrl, NO_FAIL());
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+        }),
+        onSuccess: async () => {
+          await sleep(3000);
+        },
+      },
+      {
+        title: "1 item should be queued, but no dedup anymore",
+        status: 200,
+        url: queueUrl,
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue info retrieved successfully"),
           status: yxc.number().equals(200),
-          data: yxc.object({
-            message: yxc.string().equals("Queue info retrieved successfully"),
-            status: yxc.number().equals(200),
-            result: yxc.object({
-              queue: yxc.object({
-                name: yxc.string().equals(queueName),
-                created_at: yxc.number().integer(),
-                size: yxc.number().equals(1),
-                num_deduplicating: yxc.number().equals(0), // <- expired
-                num_unacknowledged: yxc.number().equals(0),
-                num_deduplicated: yxc.number().equals(5),
-                num_acknowledged: yxc.number().equals(0),
-                num_requeued: yxc.number().equals(0),
-                deduplication_time: yxc.number().equals(3),
-                max_length: yxc.number().eq(0),
-                requeue_time: yxc.number().equals(300),
-                persistent: yxc.boolean().false(),
-                memory_size: yxc.number(),
-                dead_letter: yxc.null(),
-              }),
+          result: yxc.object({
+            queue: yxc.object({
+              name: yxc.string().equals(queueName),
+              created_at: yxc.number().integer(),
+              size: yxc.number().equals(1),
+              num_deduplicating: yxc.number().equals(0), // <- expired
+              num_unacknowledged: yxc.number().equals(0),
+              num_deduplicated: yxc.number().equals(5),
+              num_acknowledged: yxc.number().equals(0),
+              num_requeued: yxc.number().equals(0),
+              deduplication_time: yxc.number().equals(3),
+              max_length: yxc.number().eq(0),
+              requeue_time: yxc.number().equals(300),
+              persistent: yxc.boolean().false(),
+              memory_size: yxc.number(),
+              dead_letter: yxc.null(),
             }),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-});
-
-ava.serial("Enqueue item after dedup expired", async (t) => {
-  const res = await Axios.post(queueUrl + "/enqueue", reqBody, axiosConfig);
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+        }),
+      },
+      {
+        title: "Enqueue item after dedup expired",
+        status: 202,
+        url: queueUrl + "/enqueue",
+        reqBody: { messages },
+        method: "POST",
+        resBody: yxc.object({
+          message: yxc.string().equals("Request processed successfully"),
           status: yxc.number().equals(202),
-          data: yxc.object({
-            message: yxc.string().equals("Request processed successfully"),
-            status: yxc.number().equals(202),
-            result: yxc.object({
-              items: yxc.array(Message()).len(1),
-              num_enqueued: yxc.number().equals(1),
-              num_deduplicated: yxc.number().equals(0),
-            }),
+          result: yxc.object({
+            items: yxc.array(Message()).len(1),
+            num_enqueued: yxc.number().equals(1),
+            num_deduplicated: yxc.number().equals(0),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
-});
-
-ava.serial("2 items should be queued", async (t) => {
-  const res = await Axios.get(queueUrl, NO_FAIL());
-  t.assert(
-    createExecutableSchema(
-      yxc
-        .object({
+        }),
+      },
+      {
+        title: "2 items should be queued",
+        status: 200,
+        url: queueUrl,
+        resBody: yxc.object({
+          message: yxc.string().equals("Queue info retrieved successfully"),
           status: yxc.number().equals(200),
-          data: yxc.object({
-            message: yxc.string().equals("Queue info retrieved successfully"),
-            status: yxc.number().equals(200),
-            result: yxc.object({
-              queue: yxc.object({
-                name: yxc.string().equals(queueName),
-                created_at: yxc.number().integer(),
-                size: yxc.number().equals(2),
-                num_deduplicating: yxc.number().equals(1),
-                num_unacknowledged: yxc.number().equals(0),
-                num_deduplicated: yxc.number().equals(5),
-                num_acknowledged: yxc.number().equals(0),
-                num_requeued: yxc.number().equals(0),
-                deduplication_time: yxc.number().equals(3),
-                max_length: yxc.number().eq(0),
-                requeue_time: yxc.number().equals(300),
-                persistent: yxc.boolean().false(),
-                memory_size: yxc.number(),
-                dead_letter: yxc.null(),
-              }),
+          result: yxc.object({
+            queue: yxc.object({
+              name: yxc.string().equals(queueName),
+              created_at: yxc.number().integer(),
+              size: yxc.number().equals(2),
+              num_deduplicating: yxc.number().equals(1),
+              num_unacknowledged: yxc.number().equals(0),
+              num_deduplicated: yxc.number().equals(5),
+              num_acknowledged: yxc.number().equals(0),
+              num_requeued: yxc.number().equals(0),
+              deduplication_time: yxc.number().equals(3),
+              max_length: yxc.number().eq(0),
+              requeue_time: yxc.number().equals(300),
+              persistent: yxc.boolean().false(),
+              memory_size: yxc.number(),
+              dead_letter: yxc.null(),
             }),
           }),
-        })
-        .arbitrary()
-    )(res).ok
-  );
+        }),
+      },
+    ],
+  };
 });

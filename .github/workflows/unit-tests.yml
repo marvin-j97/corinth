@@ -24,8 +24,4 @@ jobs:
         run: npm ci
         working-directory: test
       - name: Test
-        uses: nick-invision/retry@v1
-        with:
-          timeout_minutes: 4
-          max_attempts: 3
-          command: npm run test:verbose
+        run: npm run test:verbose
