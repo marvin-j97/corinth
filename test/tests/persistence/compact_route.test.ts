@@ -1,12 +1,5 @@
 import { defineWorkflow, WorkflowStep } from "voce";
-import {
-  countSync,
-  getUrl,
-  IP,
-  persistenceTeardown,
-  sleep,
-  spawnCorinth,
-} from "../../util";
+import { countSync, getUrl, IP, persistenceTeardown } from "../../util";
 import { createQueue, dequeue, Message, queueUri } from "../../common";
 import yxc from "@dotvirus/yxc";
 import { assert, expect } from "chai";
@@ -14,10 +7,6 @@ import { existsSync, readFileSync } from "fs";
 import Axios from "axios";
 
 export default defineWorkflow(async () => {
-  await Axios.post(getUrl("/close"));
-  await sleep(3500);
-  spawnCorinth(undefined, 0);
-
   persistenceTeardown();
 
   const queueName = "compact_route";

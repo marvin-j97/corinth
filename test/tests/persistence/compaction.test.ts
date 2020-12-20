@@ -14,10 +14,6 @@ import { existsSync, readFileSync } from "fs";
 import Axios from "axios";
 
 export default defineWorkflow(async () => {
-  await Axios.post(getUrl("/close"));
-  await sleep(3500);
-  spawnCorinth(undefined, 0);
-
   persistenceTeardown();
 
   const queueName = "compaction_test";

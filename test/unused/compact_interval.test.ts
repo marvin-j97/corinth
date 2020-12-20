@@ -6,8 +6,8 @@ import {
   persistenceTeardown,
   sleep,
   spawnCorinth,
-} from "../../util";
-import { createQueue, dequeue, Message, queueUri } from "../../common";
+} from "../util";
+import { createQueue, dequeue, Message, queueUri } from "../common";
 import yxc from "@dotvirus/yxc";
 import { assert, expect } from "chai";
 import { existsSync, readFileSync } from "fs";
