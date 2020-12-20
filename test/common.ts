@@ -66,8 +66,13 @@ export async function enqueue<T>(
 }
 
 export async function dequeue<T>(
-  name: string
+  name: string,
+  ack = false
 ): Promise<{ items: { id: string; item: T; state: MessageState } }[]> {
-  const res = await Axios.post(queueUrl(name) + "/dequeue");
+  const res = await Axios.post(queueUrl(name) + "/dequeue", null, {
+    params: {
+      ack: String(ack),
+    },
+  });
   return res.data.result.items;
 }

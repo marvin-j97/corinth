@@ -20,5 +20,6 @@ pub fn append_to_file(path: &String, text: String) {
 pub fn create_queues_folder() -> String {
   let folder = format!("{}/queues", data_folder());
   create_dir_all(&folder).ok();
+  eprintln!("Created queues folder");
   folder
 }
