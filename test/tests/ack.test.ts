@@ -4,7 +4,7 @@ import { IP } from "../util";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "ack";
   const queueUrl = queueUri(queueName);
 
   await createQueue(queueName);

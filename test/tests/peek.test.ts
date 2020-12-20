@@ -4,7 +4,7 @@ import { createQueue, enqueue, Message, queueUri } from "../common";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "peek";
   const queueUrl = queueUri(queueName);
   const peekUrl = queueUrl + "/peek";
 

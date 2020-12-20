@@ -19,7 +19,7 @@ function createQueueParams(name: string): WorkflowStep {
 }
 
 export default defineWorkflow(async () => {
-  const queueName = "new_queue";
+  const queueName = "invalid_queue_name";
   await createQueue(queueName);
 
   return {
