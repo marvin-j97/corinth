@@ -70,7 +70,7 @@ export async function spawnCorinth(port = PORT, interval: number = 0) {
   proc.stderr?.on("data", (msg) => {
     corinthLog(msg.toString());
   });
-  // await sleep(1000);
+  await sleep(1000);
   logMessage(`Spawned corinth`);
   return proc;
 }
