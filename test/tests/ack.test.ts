@@ -1,19 +1,11 @@
 import { defineWorkflow } from "voce";
-import {
-  createQueue,
-  dequeue,
-  enqueue,
-  Message,
-  MessageState,
-  queueUri,
-} from "../common";
-import { IP, sleep } from "../util";
+import { createQueue, dequeue, enqueue, queueUri } from "../common";
+import { IP } from "../util";
 import yxc from "@dotvirus/yxc";
 
 export default defineWorkflow(async () => {
   const queueName = "new_queue";
   const queueUrl = queueUri(queueName);
-  const dequeueUrl = queueUrl + "/dequeue";
 
   await createQueue(queueName);
 
