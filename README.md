@@ -1,4 +1,4 @@
-![Unit tests](https://github.com/dotvirus/corinth/workflows/Unit%20tests/badge.svg)
+![Unit tests](https://github.com/marvin-j97/corinth/workflows/Unit%20tests/badge.svg)
 
 # Corinth
 
@@ -10,7 +10,7 @@ Written in stable, safe Rust, tested in Typescript.
 
 ## Run
 
-Grab a pre-compiled binary (https://github.com/dotvirus/corinth/releases).
+Grab a pre-compiled binary (https://github.com/marvin-j97/corinth/releases).
 
 If you're using an OS other than Windows, Linux, Mac you'll have to [build a binary yourself](#build-from-source).
 Run:
@@ -128,4 +128,4 @@ For more details on Docker volumes, check out the [official docs here](https://d
 
 ## Node.js client
 
-https://github.com/dotvirus/corinth.js
+https://github.com/marvin-j97/corinth.js
