@@ -1,6 +1,6 @@
 [package]
 name = "corinth"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["marvin-j97 <33938500+marvin-j97@users.noreply.github.com>"]
 edition = "2018"
 

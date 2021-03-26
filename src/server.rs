@@ -40,7 +40,7 @@ pub fn create_server() -> Nickel {
       format_success( StatusCode::Ok,String::from("Server info retrieved successfully"), json!({
         "info": {
           "name": String::from("Corinth"),
-          "version": String::from("0.3.0"),
+          "version": String::from("0.3.1"),
           "uptime_ms": uptime_secs * 1000,
           "uptime_secs": uptime_secs,
           "started_at": now - uptime_secs,
