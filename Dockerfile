@@ -1,8 +1,15 @@
-FROM rust
+FROM rust as builder
 
-WORKDIR /usr/src/corinth
+WORKDIR /usr/src/app
 COPY . .
 
-RUN cargo install --path .
+RUN cargo build --release
 
-CMD ["corinth"]
+RUN ls -l target/release
+
+FROM debian:buster-slim
+
+# We just need the build to execute the command
+COPY --from=builder /usr/src/app/target/release ./release
+
+CMD ["./release/corinth"]
