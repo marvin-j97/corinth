@@ -5,8 +5,6 @@ COPY . .
 
 RUN cargo build --release
 
-RUN ls -l target/release
-
 FROM debian:buster-slim
 
 # We just need the build to execute the command
