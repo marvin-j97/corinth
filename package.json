@@ -23,9 +23,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dotvirus/corinth.git"
+    "url": "git+https://github.com/marvin-j97/corinth.git"
   },
   "bugs": {
-    "url": "https://github.com/dotvirus/corinth/issues"
+    "url": "https://github.com/marvin-j97/corinth/issues"
   }
 }

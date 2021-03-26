@@ -36,7 +36,7 @@ By using environment variables, you can change some settings:
 
 ## API Documentation
 
-See https://dotvirus.github.io/corinth/api/.
+See https://marvin-j97.github.io/corinth/api/.
 
 ## Getting started
 
