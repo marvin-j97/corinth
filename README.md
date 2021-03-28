@@ -11,7 +11,7 @@
   <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/marvin-j97/corinth">
 </p>
 
-**Corinth** is a simple and portable message queue server writen in Rust.
+**Corinth** is a simple and portable message queue server written in Rust.
 
 ### Features
 
