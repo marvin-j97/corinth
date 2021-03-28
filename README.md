@@ -6,7 +6,6 @@
 
 <p align="center">
   <img src="https://github.com/marvin-j97/corinth/workflows/Unit%20tests/badge.svg" alt="Build Status">
-  <img src="https://github.com/marvin-j97/corinth/workflows/Unit%20tests/badge.svg" alt="Build Status">
   <img alt="Docker Cloud Automated build" src="https://img.shields.io/docker/cloud/automated/dotvirus/corinth">
   <img alt="Docker Cloud Build Status" src="https://img.shields.io/docker/cloud/build/dotvirus/corinth">
   <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/marvin-j97/corinth">
