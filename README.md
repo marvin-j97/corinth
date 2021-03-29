@@ -1,5 +1,5 @@
 <p align="center">
-   <img width="150" src="assets/favicon.png" alt="Build Status">
+   <img width="150" src="https://raw.githubusercontent.com/marvin-j97/corinth/dev/assets/favicon.png" alt="Logo">
 </p>
 
 <h1 align="center">Corinth</h1>
