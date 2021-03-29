@@ -49,7 +49,7 @@ By using environment variables, you can change some settings:
 | CORINTH_BASE_FOLDER      | Folder where persistent data is stored | ./.corinth |
 | CORINTH_COMPACT_INTERVAL | Compaction interval (in seconds)       | 86400      |
 
-### API Documentation
+### API documentation
 
 See https://marvin-j97.github.io/corinth/api/.
 
@@ -123,7 +123,7 @@ Use the CORINTH_PORT variable to change the port Corinth will bind to.
 docker run -d -it -p 127.0.0.1:8080:22222 --env CORINTH_PORT=22222 --rm --name corinth-queue corinth
 ```
 
-#### Docker Persistence
+#### Docker persistence
 
 To create a persistent queue within Docker you need to mount a volume and make sure to correctly set the CORINTH_BASE_FOLDER environment variable.
 
