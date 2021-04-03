@@ -3,7 +3,6 @@ extern crate nickel;
 #[macro_use]
 extern crate serde_derive;
 
-mod benchmark;
 mod date;
 mod env;
 mod fs;
