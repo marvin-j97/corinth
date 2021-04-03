@@ -18,10 +18,6 @@ use crate::global_data::read_queues_from_disk;
 use crate::server::create_server;
 
 fn main() {
-  if std::env::args().any(|x| x == "--benchmark") {
-    benchmark::benchmark();
-  }
-
   read_queues_from_disk();
   create_server()
     .listen(format!("0.0.0.0:{}", get_port()))
