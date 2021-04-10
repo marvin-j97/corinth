@@ -18,7 +18,9 @@ use crate::server::create_server;
 
 fn main() {
   read_queues_from_disk();
+  let port = get_port();
+  eprintln!("Starting on port {}", port);
   create_server()
-    .listen(format!("0.0.0.0:{}", get_port()))
+    .listen(format!("0.0.0.0:{}", port))
     .expect("Fatal error");
 }

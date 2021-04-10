@@ -27,5 +27,6 @@
   },
   "bugs": {
     "url": "https://github.com/marvin-j97/corinth/issues"
-  }
+  },
+  "dependencies": {}
 }
