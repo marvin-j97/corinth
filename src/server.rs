@@ -18,6 +18,22 @@ pub fn create_server() -> Nickel {
   server.utilize(routes::logger);
   server.get("/favicon.ico", routes::favicon_handler);
 
+  let info = middleware! { |_req, mut res|
+    let now = timestamp();
+    let uptime_secs = elapsed_secs(start_time);
+    res.set(MediaType::Json);
+    res.set(StatusCode::Ok);
+    format_success( StatusCode::Ok,String::from("Server info retrieved successfully"), json!({
+      "info": {
+        "name": String::from("Corinth"),
+        "version": String::from("0.3.2"),
+        "uptime_ms": uptime_secs * 1000,
+        "uptime_secs": uptime_secs,
+        "started_at": now - uptime_secs,
+      }
+    }))
+  };
+
   #[allow(unused_doc_comments)]
   /**
    * @api {get} / Get server info
@@ -30,24 +46,21 @@ pub fn create_server() -> Nickel {
    * @apiSuccess {Number} result:info:uptime_secs Uptime in seconds
    * @apiSuccess {Number} result:info:started_at Unix timestamp when the server was started
    */
-  server.get(
-    "/",
-    middleware! { |_req, mut res|
-      let now = timestamp();
-      let uptime_secs = elapsed_secs(start_time);
-      res.set(MediaType::Json);
-      res.set(StatusCode::Ok);
-      format_success( StatusCode::Ok,String::from("Server info retrieved successfully"), json!({
-        "info": {
-          "name": String::from("Corinth"),
-          "version": String::from("0.3.1"),
-          "uptime_ms": uptime_secs * 1000,
-          "uptime_secs": uptime_secs,
-          "started_at": now - uptime_secs,
-        }
-      }))
-    },
-  );
+  server.get("/", info);
+
+  #[allow(unused_doc_comments)]
+  /**
+   * @api {get} /info Get server info
+   * @apiName RootInfo
+   * @apiGroup Server
+   *
+   * @apiSuccess {String} result:info:name Server name
+   * @apiSuccess {String} result:info:version Server version
+   * @apiSuccess {Number} result:info:uptime_ms Uptime in milliseconds
+   * @apiSuccess {Number} result:info:uptime_secs Uptime in seconds
+   * @apiSuccess {Number} result:info:started_at Unix timestamp when the server was started
+   */
+  server.get("/info", info);
 
   #[allow(unused_doc_comments)]
   /**
