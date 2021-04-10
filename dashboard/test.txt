@@ -1,0 +1,21 @@
+asdasdasdasdasd
+asdasdasdasdasddas
+das
+dass
+<template>
+  
+</template>
+<script lang="ts">
+import { Component, Vue, Prop } from "nuxt-property-decorator";
+import { mixins } from "vue-class-component";
+@Component({
+  components: {}
+})
+export default class d
+sa
+d extends Vue {
+
+}
+</script>
+<style lang="scss" scoped>
+</style>

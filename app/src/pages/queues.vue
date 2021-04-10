@@ -8,7 +8,7 @@
           <td
             class="py-3 px-1 text-left"
             v-for="header in tableHeaders"
-            :key="header"
+            :key="header.title"
             :title="header.tooltip"
             :class="{
               tooltip: !!header.tooltip,
@@ -22,7 +22,7 @@
         <tr class="border-b border-gray-200 hover:bg-gray-200">
           <td
             @click="createDialog = true"
-            colspan="7"
+            :colspan="7"
             class="py-3 px-1 text-left whitespace-nowrap font-semibold cursor-pointer"
           >
             + Create new queue

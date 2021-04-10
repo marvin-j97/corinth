@@ -12,4 +12,9 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: "../dashboard",
+  },
+  publicDir: "/dashboard",
+  base: "/dashboard",
 });

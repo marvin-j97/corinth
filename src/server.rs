@@ -16,6 +16,7 @@ pub fn create_server() -> Nickel {
 
   // Logger middleware
   server.utilize(routes::logger);
+
   server.get("/favicon.ico", routes::favicon_handler);
 
   #[allow(unused_doc_comments)]
