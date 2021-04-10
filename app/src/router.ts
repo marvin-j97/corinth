@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 
 import Home from "./pages/index.vue";
 import Queues from "./pages/queues.vue";
+import QueueDetails from "./pages/queue_details.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -15,6 +16,11 @@ const router = createRouter({
       path: "/queues",
       name: "Queues",
       component: Queues,
+    },
+    {
+      path: "/queue/:id",
+      name: "Queue",
+      component: QueueDetails,
     },
   ],
 });

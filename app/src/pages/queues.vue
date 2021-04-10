@@ -25,7 +25,7 @@
             colspan="7"
             class="py-3 px-1 text-left whitespace-nowrap font-semibold cursor-pointer"
           >
-            Create new queue
+            + Create new queue
           </td>
         </tr>
         <tr
@@ -68,6 +68,7 @@
           <button
             :disabled="!queueName"
             class="bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-300 text-white"
+            @click="createQueue"
           >
             Create
           </button>
@@ -84,10 +85,10 @@
           <div
             class="mt-1 mb-3 text-sm opacity-60 font-medium"
             :style="{
-              opacity: !!queueName ? undefined : 0,
+              opacity: queueName !== slug ? undefined : 0,
             }"
           >
-            Will be created as <b>{{ queueName }}</b>
+            Will be created as <b>{{ slug }}</b>
           </div>
           <input type="checkbox" v-model="queuePersistent" />
           <div class="inline-block ml-2 font-semibold text-sm opacity-80">
@@ -100,9 +101,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { IQueueStat } from "corinth.js";
 import { corinth } from "../corinth";
+import slugify from "@sindresorhus/slugify";
+import router from "../router";
 
 export default defineComponent({
   name: "Queues",
@@ -133,9 +136,29 @@ export default defineComponent({
       },
     ];
     const queues = ref<IQueueStat[]>([]);
+
     const createDialog = ref(false);
     const queueName = ref("");
     const queuePersistent = ref(true);
+    const queueDeduplicationTime = ref(300);
+    const queueRequeueTime = ref(300);
+    const queueMaxLength = ref(0);
+
+    const slug = computed(() => slugify(queueName.value));
+
+    async function createQueue() {
+      try {
+        await corinth.defineQueue(slug.value).ensure({
+          deduplication_time: queueDeduplicationTime.value,
+          requeue_time: queueRequeueTime.value,
+          persistent: queuePersistent.value,
+          max_length: queueMaxLength.value,
+          // dead_letter_queue:
+          // dead_letter_queue_threshold: 3
+        });
+        router.push(`/queue/${slug.value}`);
+      } catch (error) {}
+    }
 
     onMounted(async () => {
       queues.value = await corinth.listQueues();
@@ -147,6 +170,8 @@ export default defineComponent({
       createDialog,
       queueName,
       queuePersistent,
+      slug,
+      createQueue,
     };
   },
 });
