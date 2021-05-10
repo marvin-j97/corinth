@@ -19,9 +19,9 @@ export default defineWorkflow(async () => {
             info: yxc.object({
               name: yxc.string().equals("Corinth"),
               version: yxc.string().equals("0.4.0"),
-              uptime_secs: yxc.number().natural(),
               started_at: yxc.number().natural(),
-              uptime_ms: yxc.number().natural(),
+              uptime_secs: yxc.number().natural({ withZero: true }),
+              uptime_ms: yxc.number().natural({ withZero: true }),
             }),
           }),
         }),

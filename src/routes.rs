@@ -407,7 +407,7 @@ async fn peek_handler(req: HttpRequest) -> HttpResponse {
       return HttpResponse::Ok()
         .content_type("application/json")
         .body(format_success(
-          202,
+          200,
           String::from("Message retrieved successfully"),
           json!({
             "item": unwrap_message(message.unwrap())
@@ -417,7 +417,7 @@ async fn peek_handler(req: HttpRequest) -> HttpResponse {
       return HttpResponse::Ok()
         .content_type("application/json")
         .body(format_success(
-          202,
+          200,
           String::from("Queue is empty"),
           json!({ "item": null }),
         ));
