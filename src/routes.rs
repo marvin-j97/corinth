@@ -243,7 +243,7 @@ async fn create_queue_handler(req: HttpRequest) -> HttpResponse {
     HttpResponse::Created()
       .content_type("application/json")
       .body(format_success(
-        200,
+        201,
         String::from("Queue created successfully"),
         json!(null),
       ))
