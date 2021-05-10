@@ -32,8 +32,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-// import { corinth } from "./corinth";
-import haxan from "haxan";
+import { corinth } from "./corinth";
 
 export default defineComponent({
   name: "App",
@@ -42,9 +41,7 @@ export default defineComponent({
     const dialog = ref(true);
 
     onMounted(async () => {
-      const res = await haxan("/").send();
-      console.log(res);
-      // version.value = await corinth.version();
+      version.value = await corinth.version();
     });
 
     return { version, dialog };

@@ -134,7 +134,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from "vue";
 import type { IQueueStat } from "corinth.js";
-// import { corinth } from "../corinth";
+import { corinth } from "../corinth";
 import slugify from "@sindresorhus/slugify";
 import router from "../router";
 
@@ -178,22 +178,22 @@ export default defineComponent({
     const slug = computed(() => slugify(queueName.value));
 
     async function createQueue() {
-      // try {
-      //   await corinth.defineQueue(slug.value).ensure({
-      //     deduplication_time: queueDeduplicationTime.value,
-      //     requeue_time: queueRequeueTime.value,
-      //     persistent: queuePersistent.value,
-      //     max_length: queueMaxLength.value,
-      //     // dead_letter_queue: "",
-      //     // dead_letter_queue_threshold: 3
-      //   });
-      //   router.push(`/queue/${slug.value}`);
-      // } catch (error) {}
+      try {
+        await corinth.defineQueue(slug.value).ensure({
+          deduplication_time: queueDeduplicationTime.value,
+          requeue_time: queueRequeueTime.value,
+          persistent: queuePersistent.value,
+          max_length: queueMaxLength.value,
+          // dead_letter_queue: "",
+          // dead_letter_queue_threshold: 3
+        });
+        router.push(`/queue/${slug.value}`);
+      } catch (error) {}
     }
 
-    // onMounted(async () => {
-    //   queues.value = await corinth.listQueues();
-    // });
+    onMounted(async () => {
+      queues.value = await corinth.listQueues();
+    });
 
     return {
       queues,

@@ -348,9 +348,9 @@ core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
 
-corinth.js@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/corinth.js/-/corinth.js-0.5.0.tgz#f9d23175fd1242327071745314c5273f5247815f"
+corinth.js@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/corinth.js/-/corinth.js-0.5.1.tgz#f9b4b6bcaf894a205c7e70d69b9593b8f7643034"
   dependencies:
     debug "^4.2.0"
     haxan "^0.2.1"

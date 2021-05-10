@@ -12,7 +12,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
 import router from "../router";
-// import { corinth } from "../corinth";
+import { corinth } from "../corinth";
 import type { IQueueStat } from "corinth.js";
 
 export default defineComponent({
@@ -22,11 +22,11 @@ export default defineComponent({
 
     const stat = ref<IQueueStat | null>(null);
 
-    // onMounted(async () => {
-    //   stat.value = await corinth
-    //     .defineQueue(<string>router.currentRoute.value.params.id)
-    //     .stat();
-    // });
+    onMounted(async () => {
+      stat.value = await corinth
+        .defineQueue(<string>router.currentRoute.value.params.id)
+        .stat();
+    });
 
     return { id, stat };
   },
