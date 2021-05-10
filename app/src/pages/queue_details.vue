@@ -1,7 +1,12 @@
 <template>
   <div>
-    <div>
-      {{ id }}
+    <div class="mb-5">
+      <span class="font-bold">
+        <router-link class="hover:text-blue-600" to="/queues"
+          >Queues</router-link
+        >
+      </span>
+      > {{ id }}
     </div>
     <div>
       {{ JSON.stringify(stat) }}

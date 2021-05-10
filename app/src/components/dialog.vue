@@ -55,9 +55,11 @@ export default defineComponent({
 <style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease-in-out;
+  transition: opacity 0.2s ease;
 }
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>
