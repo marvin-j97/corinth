@@ -127,8 +127,6 @@ async fn list_queues_handler() -> HttpResponse {
  */
 #[get("/queue/{queue_name}")]
 async fn get_queue_handler(req: HttpRequest) -> HttpResponse {
-  // let queue_name: String = req.match_info().query("queue_name").parse().unwrap();
-
   if queue_exists(&req) {
     let queue_name: String = req.match_info().query("queue_name").parse().unwrap();
     let queue_map = QUEUES.lock().unwrap();

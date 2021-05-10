@@ -3,7 +3,6 @@ use crate::fs::create_queues_folder;
 use crate::fs::file_exists;
 use crate::queue::{queue_meta_file, Queue};
 use lazy_static::lazy_static;
-// use nickel::Request;
 use actix_web::HttpRequest;
 use std::collections::HashMap;
 use std::fs::metadata;
