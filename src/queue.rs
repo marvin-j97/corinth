@@ -22,6 +22,9 @@ enum MessageState {
 
 type StringifiedJson = String;
 
+// Preallocate some space to avoid early reallocations
+const INITIAL_SIZE: usize = 256;
+
 pub fn unwrap_message(msg: Message) -> Value {
   let content: Value = serde_json::from_str(&msg.item).unwrap();
   json!({
@@ -108,7 +111,7 @@ fn queue_temp_file(id: &String) -> String {
 // the same way the file is ordered
 fn read_file(file: &String) -> VecDeque<Message> {
   // Result queue
-  let mut items: VecDeque<Message> = VecDeque::new();
+  let mut items: VecDeque<Message> = VecDeque::with_capacity(INITIAL_SIZE);
   let deleted_flag = "$corinth_deleted";
 
   // Read file line-by-line
@@ -145,7 +148,7 @@ fn compact_file(write_file: &String, compact_to: &String, items: &VecDeque<Messa
 
 // Initializes the queue's item queue from disk
 fn init_items(id: &String) -> VecDeque<Message> {
-  let mut items: VecDeque<Message> = VecDeque::new();
+  let mut items: VecDeque<Message> = VecDeque::with_capacity(INITIAL_SIZE);
 
   let queue_item_file = queue_item_file(&id, String::from(""));
   if file_exists(&queue_item_file) {
@@ -226,8 +229,8 @@ impl Queue {
     let mut queue = Queue {
       id: id.clone(),
       items,
-      dedup_set: HashSet::new(),
-      ack_map: HashMap::new(),
+      dedup_set: HashSet::with_capacity(INITIAL_SIZE),
+      ack_map: HashMap::with_capacity(INITIAL_SIZE),
       meta: QueueMeta {
         num_requeued: 0,
         num_deduplicated: 0,
@@ -275,8 +278,8 @@ impl Queue {
     return Queue {
       id,
       items,
-      dedup_set: HashSet::new(),
-      ack_map: HashMap::new(),
+      dedup_set: HashSet::with_capacity(INITIAL_SIZE),
+      ack_map: HashMap::with_capacity(INITIAL_SIZE),
       meta,
       persistent,
     };
@@ -546,9 +549,9 @@ impl Queue {
   }
 
   pub fn purge(&mut self, delete: bool) {
-    self.items = VecDeque::new();
-    self.ack_map = HashMap::new();
-    self.dedup_set = HashSet::new();
+    self.items = VecDeque::with_capacity(INITIAL_SIZE);
+    self.ack_map = HashMap::with_capacity(INITIAL_SIZE);
+    self.dedup_set = HashSet::with_capacity(INITIAL_SIZE);
     self.meta.num_acknowledged = 0;
     self.meta.num_deduplicated = 0;
     self.meta.num_requeued = 0;
