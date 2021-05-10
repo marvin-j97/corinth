@@ -5,7 +5,7 @@ define({
   title: "Corinth API docs",
   sampleUrl: false,
   defaultVersion: "0.0.0",
-  apidoc: "0.3.0",
+  apidoc: "0.4.0",
   generator: {
     name: "apidoc",
     time: "2021-03-29T13:43:27.407Z",
