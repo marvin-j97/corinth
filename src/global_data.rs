@@ -3,22 +3,30 @@ use crate::fs::create_queues_folder;
 use crate::fs::file_exists;
 use crate::queue::{queue_meta_file, Queue};
 use lazy_static::lazy_static;
-use nickel::Request;
+use actix_web::HttpRequest;
 use std::collections::HashMap;
 use std::fs::metadata;
 use std::fs::read_dir;
-use std::sync::Mutex;
+use std::sync::{Mutex, RwLock};
+use std::time::Instant;
 
 lazy_static! {
   pub static ref QUEUES: Mutex<HashMap<String, Queue>> = {
     let map: HashMap<String, Queue> = HashMap::new();
     Mutex::new(map)
   };
+  pub static ref START_TIME: RwLock<Instant> = RwLock::new(Instant::now());
 }
 
-pub fn queue_exists(req: &mut Request) -> bool {
+pub fn get_start_time() -> Instant {
+  let mutex = START_TIME.read().unwrap();
+  let start = *mutex;
+  start
+}
+
+pub fn queue_exists(req: &HttpRequest) -> bool {
   let queue_map = QUEUES.lock().unwrap();
-  let queue_name = String::from(req.param("queue_name").unwrap());
+  let queue_name: String = req.match_info().query("queue_name").parse().unwrap();
   let queue_maybe = queue_map.get(&queue_name);
   queue_maybe.is_some()
 }

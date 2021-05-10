@@ -1,10 +1,17 @@
+import { ChildProcess } from "child_process";
 import { persistenceTeardown, spawnCorinth } from "./test/util";
+
+let process: ChildProcess;
 
 export default {
   hooks: {
     before: async () => {
       persistenceTeardown();
-      await spawnCorinth();
+      process = await spawnCorinth();
+    },
+    after: async () => {
+      console.error("Killing corinth exe");
+      process.kill();
     },
   },
 };

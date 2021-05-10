@@ -28,5 +28,6 @@ jobs:
         with:
           files: |
             target/release/corinth-${{ github.event.release.tag_name }}.exe
+            dashboard/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

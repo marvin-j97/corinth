@@ -1,28 +1,6 @@
 [
   {
     "type": "post",
-    "url": "/queue/:queue/:message/ack",
-    "title": "Acknowledge message reception",
-    "name": "AckMessage",
-    "group": "Queue",
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "404",
-            "description": "<p>Message not found</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "src/server.rs",
-    "groupTitle": "Queue"
-  },
-  {
-    "type": "post",
     "url": "/queue/:queue/compact",
     "title": "Compact queue file",
     "name": "CompactQueue",
@@ -40,7 +18,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -116,7 +94,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -138,7 +116,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -206,11 +184,11 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
-    "type": "put",
+    "type": "patch",
     "url": "/queue/:queue",
     "title": "Edit queue",
     "name": "EditQueue",
@@ -261,7 +239,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -329,44 +307,14 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
     "type": "get",
-    "url": "/queues",
-    "title": "List queues",
-    "name": "ListQueues",
-    "group": "Queue",
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "result:queues:items",
-            "description": "<p>Queue names</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:queues:length",
-            "description": "<p>Amount of queues</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "src/server.rs",
-    "groupTitle": "Queue"
-  },
-  {
-    "type": "get",
-    "url": "/queues",
+    "url": "/queue/:queue_name",
     "title": "Get queue info",
-    "name": "ListQueues",
+    "name": "GetQueue",
     "group": "Queue",
     "success": {
       "fields": {
@@ -485,7 +433,37 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
+    "groupTitle": "Queue"
+  },
+  {
+    "type": "get",
+    "url": "/queues",
+    "title": "List queues",
+    "name": "ListQueues",
+    "group": "Queue",
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "result:queues:items",
+            "description": "<p>Queue names</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "result:queues:length",
+            "description": "<p>Amount of queues</p>"
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -520,7 +498,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -542,7 +520,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Queue"
   },
   {
@@ -593,58 +571,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "src/server.rs",
-    "groupTitle": "Server"
-  },
-  {
-    "type": "get",
-    "url": "/info",
-    "title": "Get server info",
-    "name": "RootInfo",
-    "group": "Server",
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "result:info:name",
-            "description": "<p>Server name</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "result:info:version",
-            "description": "<p>Server version</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:uptime_ms",
-            "description": "<p>Uptime in milliseconds</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:uptime_secs",
-            "description": "<p>Uptime in seconds</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "result:info:started_at",
-            "description": "<p>Unix timestamp when the server was started</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Server"
   },
   {
@@ -654,7 +581,7 @@
     "name": "ShutdownServer",
     "group": "Server",
     "version": "0.0.0",
-    "filename": "src/server.rs",
+    "filename": "src/routes.rs",
     "groupTitle": "Server"
   }
 ]
