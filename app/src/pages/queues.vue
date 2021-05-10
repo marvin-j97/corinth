@@ -3,7 +3,14 @@
     <table class="min-w-max w-full table-auto shadow">
       <thead>
         <tr
-          class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal font-semibold"
+          class="
+            bg-gray-200
+            text-gray-600
+            uppercase
+            text-sm
+            leading-normal
+            font-semibold
+          "
         >
           <td
             class="py-3 px-1 text-left"
@@ -23,7 +30,14 @@
           <td
             @click="createDialog = true"
             :colspan="7"
-            class="py-3 px-1 text-left whitespace-nowrap font-semibold cursor-pointer"
+            class="
+              py-3
+              px-1
+              text-left
+              whitespace-nowrap
+              font-semibold
+              cursor-pointer
+            "
           >
             + Create new queue
           </td>
@@ -67,7 +81,15 @@
           <div style="flex-grow: 1"></div>
           <button
             :disabled="!queueName"
-            class="bg-blue-700 font-bold py-2 px-5 rounded-lg disabled:bg-gray-300 text-white"
+            class="
+              bg-blue-700
+              font-bold
+              py-2
+              px-5
+              rounded-lg
+              disabled:bg-gray-300
+              text-white
+            "
             @click="createQueue"
           >
             Create
@@ -80,7 +102,16 @@
             v-model="queueName"
             placeholder="Queue name"
             spellcheck="false"
-            class="rounded px-4 py-3 focus:outline-none bg-gray-200 w-full font-semibold text-sm"
+            class="
+              rounded
+              px-4
+              py-3
+              focus:outline-none
+              bg-gray-200
+              w-full
+              font-semibold
+              text-sm
+            "
           />
           <div
             class="mt-1 mb-3 text-sm opacity-60 font-medium"
@@ -102,8 +133,8 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from "vue";
-import { IQueueStat } from "corinth.js";
-import { corinth } from "../corinth";
+import type { IQueueStat } from "corinth.js";
+// import { corinth } from "../corinth";
 import slugify from "@sindresorhus/slugify";
 import router from "../router";
 
@@ -147,22 +178,22 @@ export default defineComponent({
     const slug = computed(() => slugify(queueName.value));
 
     async function createQueue() {
-      try {
-        await corinth.defineQueue(slug.value).ensure({
-          deduplication_time: queueDeduplicationTime.value,
-          requeue_time: queueRequeueTime.value,
-          persistent: queuePersistent.value,
-          max_length: queueMaxLength.value,
-          // dead_letter_queue:
-          // dead_letter_queue_threshold: 3
-        });
-        router.push(`/queue/${slug.value}`);
-      } catch (error) {}
+      // try {
+      //   await corinth.defineQueue(slug.value).ensure({
+      //     deduplication_time: queueDeduplicationTime.value,
+      //     requeue_time: queueRequeueTime.value,
+      //     persistent: queuePersistent.value,
+      //     max_length: queueMaxLength.value,
+      //     // dead_letter_queue: "",
+      //     // dead_letter_queue_threshold: 3
+      //   });
+      //   router.push(`/queue/${slug.value}`);
+      // } catch (error) {}
     }
 
-    onMounted(async () => {
-      queues.value = await corinth.listQueues();
-    });
+    // onMounted(async () => {
+    //   queues.value = await corinth.listQueues();
+    // });
 
     return {
       queues,

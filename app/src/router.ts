@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 
-import Home from "./pages/index.vue";
+// import Home from "./pages/index.vue";
 import Queues from "./pages/queues.vue";
 import QueueDetails from "./pages/queue_details.vue";
 
@@ -10,7 +10,8 @@ const router = createRouter({
     {
       path: "/",
       name: "Home",
-      component: Home,
+      //component: Home,
+      redirect: "/queues",
     },
     {
       path: "/queues",

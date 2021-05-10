@@ -5,7 +5,8 @@
       id="header"
     >
       <div class="font-bold mr-2">
-        <router-link to="/">Corinth</router-link>
+        Corinth
+        <!-- <router-link to="/">Corinth</router-link> -->
       </div>
       <div class="text-medium text-opacity-60">
         <router-link to="/queues">Queues</router-link>
@@ -31,16 +32,19 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-import { corinth } from "./corinth";
+// import { corinth } from "./corinth";
+import haxan from "haxan";
 
 export default defineComponent({
   name: "App",
   setup() {
-    const version = ref("0.0.0");
+    const version = ref("");
     const dialog = ref(true);
 
     onMounted(async () => {
-      version.value = await corinth.version();
+      const res = await haxan("/").send();
+      console.log(res);
+      // version.value = await corinth.version();
     });
 
     return { version, dialog };
