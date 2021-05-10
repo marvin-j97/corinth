@@ -259,6 +259,7 @@ struct EnqueueBody {
   messages: Vec<NewItem>,
 }
 
+// TODO: unnecessary
 fn are_all_objects(vec: &Vec<NewItem>) -> bool {
   let mut all_objects = true;
 
