@@ -92,7 +92,9 @@ export default defineWorkflow(async () => {
               requeue_time: yxc.number().equals(300),
               persistent: yxc.boolean().true(),
               memory_size: yxc.number(),
+              disk_size: yxc.number(),
               dead_letter: yxc.null(),
+              last_compacted_at: yxc.number().eq(0),
             }),
           }),
         }),
@@ -124,7 +126,9 @@ export default defineWorkflow(async () => {
               requeue_time: yxc.number().equals(300),
               persistent: yxc.boolean().true(),
               memory_size: yxc.number(),
+              disk_size: yxc.number(),
               dead_letter: yxc.null(),
+              last_compacted_at: yxc.number().eq(0),
             }),
           }),
         }),
@@ -176,7 +180,12 @@ export default defineWorkflow(async () => {
               requeue_time: yxc.number().equals(300),
               persistent: yxc.boolean().true(),
               memory_size: yxc.number(),
+              disk_size: yxc.number(),
               dead_letter: yxc.null(),
+              last_compacted_at: yxc
+                .number()
+                .integer()
+                .rule((x) => x > 0),
             }),
           }),
         }),

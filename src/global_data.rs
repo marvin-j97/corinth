@@ -35,13 +35,13 @@ pub fn read_queues_from_disk() {
   let folder = create_queues_folder();
   let entries = read_dir(folder).expect("readdir failed");
   let mut queue_map = QUEUES.lock().unwrap();
+  
   for entry in entries {
     let file = entry.unwrap();
     let queue_name = file.file_name().into_string().unwrap();
     if metadata(file.path()).unwrap().is_dir() {
       if file_exists(&queue_meta_file(&queue_name)) {
         let mut queue = Queue::from_disk(queue_name.clone());
-        eprintln!("Read queue '{}' from disk", queue_name);
         queue.start_compact_interval(get_compaction_interval().into());
         queue_map.insert(queue_name, queue);
       } else {

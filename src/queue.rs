@@ -56,6 +56,7 @@ pub struct QueueDeadLetterSettings {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct QueueMeta {
   created_at: u64,
+  last_compacted_at: u64,
   num_acknowledged: u64,
   num_deduplicated: u64,
   num_requeued: u64,
@@ -134,6 +135,8 @@ fn read_file(file: &String) -> VecDeque<Message> {
 // Write all items into a temp file
 // Then rename tmp_file ~> real_file
 fn compact_file(write_file: &String, compact_to: &String, items: &VecDeque<Message>) {
+  eprintln!("Compacting {}", compact_to);
+
   File::create(write_file).expect("Failed to create temporary write file");
 
   for item in items.iter() {
@@ -193,6 +196,22 @@ impl Queue {
       + self.dedup_size() * size_of::<String>()
   }
 
+  pub fn get_disk_size(&self) -> Option<u64> {
+    if self.is_persistent() {
+      let filename = queue_item_file(&self.id, String::from(""));
+      let metadata = std::fs::metadata(filename).ok();
+
+      if metadata.is_none() {
+        eprintln!("Could not read queue file metadata");
+        return None;
+      }
+
+      Some(metadata.unwrap().len())
+    } else {
+      None
+    }
+  }
+
   pub fn start_compact_interval(&mut self, secs: u64) {
     if !self.is_persistent() || secs == 0 {
       return;
@@ -209,7 +228,6 @@ impl Queue {
       let this_queue = queue_map.get_mut(&this_id);
       if this_queue.is_some() {
         let queue = this_queue.unwrap();
-        eprintln!("Compacting {}", queue.id);
         queue.compact();
       } else {
         break;
@@ -218,13 +236,21 @@ impl Queue {
   }
 
   pub fn compact(&mut self) {
+    eprintln!("Compacting queue {}", &self.id);
+
     let id = &self.id;
     let queue_item_file = queue_item_file(&id, String::from(""));
     compact_file(&queue_temp_file(id), &queue_item_file, &self.items);
+
+    eprintln!("Updating last_compacted_at timestamp");
+    self.meta.last_compacted_at = timestamp();
+    self.write_metadata();
   }
 
   // Read queue from disk
   pub fn from_disk(id: String) -> Queue {
+    eprintln!("Reading queue '{}' from disk", id);
+
     let items: VecDeque<Message> = init_items(&id);
     let mut queue = Queue {
       id: id.clone(),
@@ -236,6 +262,7 @@ impl Queue {
         num_deduplicated: 0,
         num_acknowledged: 0,
         created_at: timestamp(),
+        last_compacted_at: timestamp(),
         requeue_time: 300,
         deduplication_time: 300,
         max_length: 0,
@@ -247,6 +274,11 @@ impl Queue {
     let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
     let metadata: QueueMeta = serde_json::from_str(&metadata).expect("Couldn't read metadata file");
     queue.meta = metadata;
+    
+     // Overwrite timestamp because it was compacted on init
+    queue.meta.last_compacted_at = timestamp();
+    queue.write_metadata();
+
     queue
   }
 
@@ -265,6 +297,7 @@ impl Queue {
       num_deduplicated: 0,
       num_acknowledged: 0,
       created_at: timestamp(),
+      last_compacted_at: 0,
       requeue_time,
       deduplication_time,
       max_length,
@@ -499,6 +532,11 @@ impl Queue {
   // Returns the time the queue was created
   pub fn created_at(&self) -> u64 {
     self.meta.created_at
+  }
+
+  // Returns the time the queue was last compacted at
+  pub fn last_compacted_at(&self) -> u64 {
+    self.meta.last_compacted_at
   }
 
   // Returns the amount of dedup hits

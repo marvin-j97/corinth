@@ -59,6 +59,7 @@ fn format_queue_info(queue: &Queue) -> Value {
   json!({
     "name": queue.get_name(),
     "created_at": queue.created_at(),
+    "last_compacted_at": queue.last_compacted_at(),
     "size": queue.size(),
     "num_deduplicating": queue.dedup_size(),
     "num_unacknowledged": queue.ack_size(),
@@ -69,6 +70,7 @@ fn format_queue_info(queue: &Queue) -> Value {
     "max_length": queue.max_length(),
     "persistent": queue.is_persistent(),
     "memory_size": queue.get_memory_size(),
+    "disk_size": queue.get_disk_size(),
     "num_requeued": queue.num_requeued(),
     "dead_letter": queue.get_meta().dead_letter_queue
   })
