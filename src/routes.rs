@@ -511,7 +511,6 @@ struct QueuePatchBody {
  *
  * @apiParam {String} body:requeue_time (Optional) Ack time in seconds
  * @apiParam {String} body:deduplication_time (Optional) Deduplication time in seconds
- * @apiParam {String} body:max_length (Optional) Queue max length
  *
  * @apiError 400 Invalid input
  * @apiError 404 Queue not found
@@ -547,12 +546,6 @@ async fn edit_queue_handler(info: web::Json<QueuePatchBody>, req: HttpRequest) -
     let value = body.requeue_time.unwrap();
     eprintln!("{}: Setting requeue_time to {}", queue_name, value);
     queue.set_requeue_time(body.requeue_time.unwrap());
-  }
-
-  if body.max_length.is_some() {
-    let value = body.max_length.unwrap();
-    eprintln!("{}: Setting max_length to {}", queue_name, value);
-    queue.set_max_length(body.max_length.unwrap());
   }
 
   if queue.is_persistent() {

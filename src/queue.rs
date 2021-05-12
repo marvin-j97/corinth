@@ -554,10 +554,6 @@ impl Queue {
     self.ack_map.len()
   }
 
-  pub fn set_max_length(&mut self, max: u64) {
-    self.meta.max_length = max;
-  }
-
   pub fn set_deduplication_time(&mut self, time: u32) {
     self.meta.deduplication_time = time;
   }
