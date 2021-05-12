@@ -209,13 +209,6 @@ define({ "api": [
             "optional": false,
             "field": "body:deduplication_time",
             "description": "<p>(Optional) Deduplication time in seconds</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "body:max_length",
-            "description": "<p>(Optional) Queue max length</p>"
           }
         ]
       }
