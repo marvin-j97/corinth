@@ -184,6 +184,17 @@ fn get_message(queue: &String, msg_id: &String) -> Option<Message> {
   }
 }
 
+fn get_disk_size(filename: &String) -> u64 {
+  let metadata = std::fs::metadata(filename).ok();
+
+  if metadata.is_none() {
+    eprintln!("Could not read queue file metadata");
+    return 0;
+  }
+
+  metadata.unwrap().len()
+}
+
 impl Queue {
   pub fn write_metadata(&self) {
     write_metadata(&self.id, &self.meta)
@@ -198,15 +209,13 @@ impl Queue {
 
   pub fn get_disk_size(&self) -> Option<u64> {
     if self.is_persistent() {
-      let filename = queue_item_file(&self.id, String::from(""));
-      let metadata = std::fs::metadata(filename).ok();
+      let item_file = queue_item_file(&self.id, String::from(""));
+      let item_file_size = get_disk_size(&item_file);
 
-      if metadata.is_none() {
-        eprintln!("Could not read queue file metadata");
-        return None;
-      }
+      let meta_file = queue_meta_file(&self.id);
+      let meta_file_size = get_disk_size(&meta_file);
 
-      Some(metadata.unwrap().len())
+      Some(item_file_size + meta_file_size)
     } else {
       None
     }

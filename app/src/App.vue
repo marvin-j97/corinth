@@ -1,7 +1,16 @@
 <template>
   <div class="h-full app">
     <div
-      class="fixed w-full shadow-md p-3 flex justify-center align-center"
+      class="
+        fixed
+        w-full
+        shadow-md
+        p-3
+        flex
+        justify-center
+        items-center
+        bg-white
+      "
       id="header"
     >
       <div class="font-bold mr-2">
@@ -14,7 +23,7 @@
     </div>
 
     <div class="px-3 pt-16" id="content">
-      <div class="mx-auto max-w-screen-lg">
+      <div class="mx-auto max-w-screen-lg overflow-hidden">
         <router-view></router-view>
       </div>
     </div>
@@ -62,5 +71,11 @@ export default defineComponent({
 body {
   height: 100vh;
   margin: 0;
+}
+
+button {
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 </style>

@@ -1,5 +1,33 @@
 <template>
   <div>
+    <div class="flex items-center mb-4">
+      <div class="font-bold text-gray-600">
+        {{ foundQueues.length }}
+        {{ foundQueues.length === 1 ? "queue" : "queues" }} found
+      </div>
+      <div class="flex-grow"></div>
+      <div>
+        <input
+          class="
+            font-semibold
+            shadow
+            appearance-none
+            border
+            rounded
+            w-full
+            py-2
+            px-3
+            text-gray-700
+            leading-tight
+            focus:outline-none
+            focus:shadow-outline
+          "
+          placeholder="Search"
+          v-model="searchTerm"
+        />
+      </div>
+    </div>
+
     <table class="min-w-max w-full table-auto shadow">
       <thead>
         <tr
@@ -13,7 +41,7 @@
           "
         >
           <td
-            class="py-3 px-1 text-left"
+            class="py-3 px-2 text-left"
             v-for="header in tableHeaders"
             :key="header.title"
             :title="header.tooltip"
@@ -29,7 +57,7 @@
         <tr class="border-b border-gray-200 hover:bg-gray-200">
           <td
             @click="createDialog = true"
-            :colspan="7"
+            :colspan="8"
             class="
               py-3
               px-1
@@ -44,10 +72,10 @@
         </tr>
         <tr
           class="border-b border-gray-200"
-          v-for="queue in queues"
+          v-for="queue in foundQueues"
           :key="queue.name"
         >
-          <td class="py-3 px-1 text-left whitespace-nowrap font-semibold">
+          <td class="py-3 px-2 text-left whitespace-nowrap font-semibold">
             <router-link :to="`/queue/${queue.name}`">
               <span class="hover:text-blue-600">{{ queue.name }}</span>
             </router-link>
@@ -64,82 +92,46 @@
           <td class="py-3 px-1 text-left whitespace-nowrap">
             {{ queue.num_acknowledged }}
           </td>
-          <td class="py-3 px-1 text-left whitespace-nowrap">
+          <td
+            class="py-3 px-1 text-left whitespace-nowrap tooltip"
+            :title="bytesToReadableFormats(queue.disk_size)"
+          >
+            {{ queue.disk_size }} bytes
+          </td>
+          <td
+            class="py-3 px-1 text-left whitespace-nowrap tooltip"
+            :title="bytesToReadableFormats(queue.memory_size)"
+          >
             {{ queue.memory_size }} bytes
           </td>
           <td class="py-3 px-1 text-left whitespace-nowrap">
-            {{ queue.persistent ? "Yes" : "No" }}
+            <i> {{ queue.persistent ? "Yes" : "No" }}</i>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <Teleport to="#dialog-target">
-      <c-dialog v-model="createDialog" render-target="#dialog-target">
-        <template v-slot:title>Create queue</template>
-        <template v-slot:actions>
-          <div style="flex-grow: 1"></div>
-          <button
-            :disabled="!queueName"
-            class="
-              bg-blue-700
-              font-bold
-              py-2
-              px-5
-              rounded-lg
-              disabled:bg-gray-300
-              text-white
-            "
-            @click="createQueue"
-          >
-            Create
-          </button>
-          <div style="flex-grow: 1"></div>
-        </template>
-        <div>
-          <input
-            type="text"
-            v-model="queueName"
-            placeholder="Queue name"
-            spellcheck="false"
-            class="
-              rounded
-              px-4
-              py-3
-              focus:outline-none
-              bg-gray-200
-              w-full
-              font-semibold
-              text-sm
-            "
-          />
-          <div
-            class="mt-1 mb-3 text-sm opacity-60 font-medium"
-            :style="{
-              opacity: queueName !== slug ? undefined : 0,
-            }"
-          >
-            Will be created as <b>{{ slug }}</b>
-          </div>
-          <input type="checkbox" v-model="queuePersistent" />
-          <div class="inline-block ml-2 font-semibold text-sm opacity-80">
-            Persistent
-          </div>
-        </div>
-      </c-dialog>
-    </Teleport>
+    <create-queue-dialog
+      :modelValue="createDialog"
+      @update:modelValue="createDialog = $event"
+      @created="onQueueCreated"
+      :queues="queues.map((c) => c.name)"
+    />
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { defineComponent, onMounted, ref, computed } from "vue";
 import type { IQueueStat } from "corinth.js";
+
 import { corinth } from "../corinth";
-import slugify from "@sindresorhus/slugify";
-import router from "../router";
+import CreateQueueDialog from "../components/create_queue_dialog.vue";
 
 export default defineComponent({
   name: "Queues",
+  components: {
+    CreateQueueDialog,
+  },
   setup() {
     const tableHeaders = [
       {
@@ -160,6 +152,9 @@ export default defineComponent({
         tooltip: "Acknowledged ('ack') messages",
       },
       {
+        title: "Disk size",
+      },
+      {
         title: "Memory size",
       },
       {
@@ -168,53 +163,57 @@ export default defineComponent({
     ];
     const queues = ref<IQueueStat[]>([]);
 
+    const searchTerm = ref("");
     const createDialog = ref(false);
-    const queueName = ref("");
-    const queuePersistent = ref(true);
-    const queueDeduplicationTime = ref(300);
-    const queueRequeueTime = ref(300);
-    const queueMaxLength = ref(0);
-
-    const slug = computed(() => slugify(queueName.value));
-
-    async function createQueue() {
-      try {
-        await corinth.defineQueue(slug.value).ensure({
-          deduplication_time: queueDeduplicationTime.value,
-          requeue_time: queueRequeueTime.value,
-          persistent: queuePersistent.value,
-          max_length: queueMaxLength.value,
-          // dead_letter_queue: "",
-          // dead_letter_queue_threshold: 3
-        });
-        router.push(`/queue/${slug.value}`);
-      } catch (error) {}
-    }
 
     onMounted(async () => {
       queues.value = await corinth.listQueues();
     });
 
+    function bytesToReadableFormats(bytes: number): string {
+      const formats: [number, string][] = [
+        [1000, "KB"],
+        [1000 * 1000, "MB"],
+        [1000 * 1000 * 1000, "GB"],
+      ];
+
+      return formats
+        .map(([div, unit]) => `${(bytes / div).toFixed(2)} ${unit}`)
+        .join("\n");
+    }
+
+    const foundQueues = computed(() => {
+      return queues.value.filter(({ name }) => {
+        if (!searchTerm.value.length) {
+          return true;
+        }
+        return name.toLowerCase().includes(searchTerm.value.toLowerCase());
+      });
+    });
+
+    async function onQueueCreated() {
+      createDialog.value = false;
+      queues.value = await corinth.listQueues();
+    }
+
     return {
-      queues,
       tableHeaders,
+
+      queues,
+      foundQueues,
+      searchTerm,
+
       createDialog,
-      queueName,
-      queuePersistent,
-      slug,
-      createQueue,
+
+      bytesToReadableFormats,
+
+      onQueueCreated,
     };
   },
 });
 </script>
 
 <style lang="scss">
-button {
-  &:disabled {
-    cursor: not-allowed;
-  }
-}
-
 tbody {
   tr:nth-child(even) {
     background: #f5f5f5;
