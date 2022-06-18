@@ -283,8 +283,8 @@ impl Queue {
     let metadata = read_to_string(metadata_file).expect("Couldn't read metadata file");
     let metadata: QueueMeta = serde_json::from_str(&metadata).expect("Couldn't read metadata file");
     queue.meta = metadata;
-    
-     // Overwrite timestamp because it was compacted on init
+
+    // Overwrite timestamp because it was compacted on init
     queue.meta.last_compacted_at = timestamp();
     queue.write_metadata();
 

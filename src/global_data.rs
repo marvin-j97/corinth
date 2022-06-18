@@ -2,8 +2,8 @@ use crate::env::get_compaction_interval;
 use crate::fs::create_queues_folder;
 use crate::fs::file_exists;
 use crate::queue::{queue_meta_file, Queue};
-use lazy_static::lazy_static;
 use actix_web::HttpRequest;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::fs::metadata;
 use std::fs::read_dir;
@@ -35,7 +35,7 @@ pub fn read_queues_from_disk() {
   let folder = create_queues_folder();
   let entries = read_dir(folder).expect("readdir failed");
   let mut queue_map = QUEUES.lock().unwrap();
-  
+
   for entry in entries {
     let file = entry.unwrap();
     let queue_name = file.file_name().into_string().unwrap();

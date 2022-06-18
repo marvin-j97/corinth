@@ -10,6 +10,7 @@ mod response;
 mod routes;
 
 use crate::env::get_port;
+use crate::global_data::get_start_time;
 use crate::global_data::read_queues_from_disk;
 use crate::routes::{
   ack_handler, close_handler, compact_handler, create_queue_handler, delete_handler,
@@ -27,6 +28,7 @@ async fn main() -> std::io::Result<()> {
   let bind = format!("0.0.0.0:{}", port);
 
   eprintln!("Starting on port {}", port);
+  eprintln!("Start time: {:?}", get_start_time());
 
   let server = HttpServer::new(|| {
     App::new()

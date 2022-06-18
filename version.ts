@@ -20,7 +20,7 @@ async function main() {
 
   const releaseTag = process.argv[2];
 
-  const corinth = spawnCorinth();
+  const corinth = await spawnCorinth();
   const corinthVersion = await getCorinthVersion();
   corinth.kill();
 

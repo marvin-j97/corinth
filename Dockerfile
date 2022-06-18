@@ -1,15 +1,23 @@
+#
+# Build stage
+#
 FROM rust as builder
 
-WORKDIR /usr/src/app
+ENV TARGET=x86_64-unknown-linux-musl
+
+WORKDIR /app
 COPY . .
 
-RUN cargo build --release
+RUN rustup target add ${TARGET}
+RUN cargo build --release --target=${TARGET}
 
-FROM debian:buster-slim
+#
+# Runner stage
+#
+FROM alpine:latest AS runner
 
-# We just need the build to execute the command
 COPY assets assets
 COPY dashboard dashboard
-COPY --from=builder /usr/src/app/target/release ./release
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/corinth ./corinth
 
-CMD ["./release/corinth"]
+CMD ["./corinth"]

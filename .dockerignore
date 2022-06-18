@@ -1,2 +1,8 @@
 Cargo.lock
 node_modules
+test
+.git
+.github
+.corinth
+app
+docs
